@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse
 import base64
 import os
 import json
-
+import time
 
 app = FastAPI()
 
@@ -34,6 +34,6 @@ async def websocket_endpoint(websocket: WebSocket):
             with open(os.path.join(UPLOAD_DIR, filename), "wb") as f:
                 f.write(image_bytes)
 
-            print(f"Saved {filename}")
+            print(f"Saved {filename} at {time.time()}")
     except WebSocketDisconnect:
         print("Client disconnected.")

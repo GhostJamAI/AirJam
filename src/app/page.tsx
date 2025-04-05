@@ -3,7 +3,6 @@ import { useRef } from "react";
 import Instruments from "./components/Instruments";
 import Webcam from "./components/Webcam";
 
-
 export default function Home() {
     const ws = useRef<WebSocket | null>(null);
 
@@ -22,7 +21,7 @@ export default function Home() {
     };
 
     const sendImage = async (base64: string) => {
-        if (!ws.current || ws.current.readyState !== WebSocket.OPEN) {
+        if (!ws.current) {
             connectWebSocket();
             await new Promise((res) => setTimeout(res, 500));
         }
@@ -38,8 +37,8 @@ export default function Home() {
     return (
         <div className="h-[100vh] w-[100vw] bg-white text-black">
             <div className="p-1 font-bold">GhostJam</div>
-            <Webcam />
             <Instruments />
+            <Webcam ws={ws.current} sendImage={sendImage} />
         </div>
     );
 }
