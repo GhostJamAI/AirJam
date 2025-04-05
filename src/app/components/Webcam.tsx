@@ -1,12 +1,17 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-
-export default function Webcam() {
+import { WebsocketMessage } from "../types/WebsocketTypes";
+type WebcamProps = {
+    ws: WebSocket | null
+    sendImage: (v: string) => void
+}
+export default function Webcam({ws, sendImage}:WebcamProps) {
     const wcRef = useRef<HTMLVideoElement>(null);
     const cvRef = useRef<HTMLCanvasElement>(null);
 
     const [streaming, setStreaming] = useState(false);
     const [frameTimeout, setFrameTimeout] = useState<NodeJS.Timeout>();
+    const [flip, setFlip] = useState(false);
 
     useEffect(() => {
         const enableStream = async () => {
@@ -29,21 +34,30 @@ export default function Webcam() {
     }, [wcRef]); // Empty array ensures it runs once on mount
 
     useEffect(() => {
-        if (streaming) setFrameTimeout(setInterval(takePicture, 100));
-        else setFrameTimeout(undefined);
+        if (streaming) setFlip(!flip)
     }, [streaming]);
+
+    useEffect(()=>{
+        if(streaming)
+        {
+            takePicture()
+            setTimeout(()=>setFlip(!flip),100)
+        }
+    },[flip])
 
     function takePicture() {
         const cv = cvRef?.current;
         const context = cv?.getContext("2d");
-        console.log(context);
         if (cv && context && wcRef.current) {
             cv.width = 1280;
             cv.height = 720;
             context.drawImage(wcRef.current, 0, 0, 1280, 720);
 
-            const data = cv.toDataURL("image/png");
-            console.log(data);
+            const frame = cv.toDataURL("image/png");
+
+            sendImage(frame);
+
+            console.log(frame);
         }
     }
 
