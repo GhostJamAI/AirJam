@@ -2,11 +2,10 @@
 import { useEffect, useRef, useState } from "react";
 type WebcamProps = {
     ws: WebSocket | null
-    recTime: number
+    imgData: {data: string, time: number}
     sendImage: (v: string) => void
-    imageStr: string
 }
-export default function Webcam({ws, recTime, sendImage, imageStr}:WebcamProps) {
+export default function Webcam({ws, imgData, sendImage}:WebcamProps) {
     const wcRef = useRef<HTMLVideoElement>(null);
     const cvRef = useRef<HTMLCanvasElement>(null);
     const imgRef = useRef<HTMLImageElement>(null)
@@ -39,10 +38,9 @@ export default function Webcam({ws, recTime, sendImage, imageStr}:WebcamProps) {
     useEffect(()=>{
         if(ws?.readyState != ws?.OPEN) return
         
-        console.log(imageStr)
-        if(imgRef.current) imgRef.current.src = imageStr
+        if(imgRef.current) imgRef.current.src = imgData.data
         takePicture()
-    },[recTime, ws?.readyState])
+    },[imgData.time, ws?.readyState])
 
     function takePicture() {
         const cv = cvRef?.current;
