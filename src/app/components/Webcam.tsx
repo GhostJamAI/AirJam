@@ -13,6 +13,8 @@ export default function Webcam({ws, sendImage}:WebcamProps) {
     const [frameTimeout, setFrameTimeout] = useState<NodeJS.Timeout>();
     const [flip, setFlip] = useState(false);
 
+    let w = 320
+    let h = 180
     useEffect(() => {
         const enableStream = async () => {
             try {
@@ -49,9 +51,9 @@ export default function Webcam({ws, sendImage}:WebcamProps) {
         const cv = cvRef?.current;
         const context = cv?.getContext("2d");
         if (cv && context && wcRef.current) {
-            cv.width = 1280;
-            cv.height = 720;
-            context.drawImage(wcRef.current, 0, 0, 1280, 720);
+            cv.width = w;
+            cv.height = h;
+            context.drawImage(wcRef.current, 0, 0, w, h);
 
             const frame = cv.toDataURL("image/png");
 

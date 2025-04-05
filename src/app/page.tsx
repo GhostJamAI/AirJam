@@ -21,7 +21,7 @@ export default function Home() {
     };
 
     const sendImage = async (base64: string) => {
-        if (!ws.current || ws.current.readyState !== WebSocket.OPEN) {
+        if (!ws.current) {
             connectWebSocket();
             await new Promise((res) => setTimeout(res, 500));
         }
