@@ -11,11 +11,10 @@ export default function Webcam({ws, imgData, sendImage}:WebcamProps) {
     const imgRef = useRef<HTMLImageElement>(null)
 
     const [streaming, setStreaming] = useState(false);
-    const [frameTimeout, setFrameTimeout] = useState<NodeJS.Timeout>();
     const [flip, setFlip] = useState(false);
 
-    let w = 320;
-    let h = 180;
+    const w = 320;
+    const h = 180;
     useEffect(() => {
         const enableStream = async () => {
             try {

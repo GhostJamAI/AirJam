@@ -5,12 +5,12 @@ import Webcam from "./components/Webcam";
 import { WebsocketFrame } from "./types/WebsocketTypes";
 
 type ImgData = {
-    data: string,
-    time: number
-}
+    data: string;
+    time: number;
+};
 export default function Home() {
     const ws = useRef<WebSocket | null>(null);
-    const [imgData, setImgData] = useState<ImgData>({data: "", time: 0})
+    const [imgData, setImgData] = useState<ImgData>({ data: "", time: 0 });
 
     const connectWebSocket = () => {
         ws.current = new WebSocket("ws://localhost:8000/ws");
@@ -20,9 +20,9 @@ export default function Home() {
         };
 
         ws.current.onmessage = (event) => {
-            const res:WebsocketFrame = JSON.parse(event.data)
+            const res: WebsocketFrame = JSON.parse(event.data);
 
-            setImgData({data: res.data, time: Date.now()})
+            setImgData({ data: res.data, time: Date.now() });
         };
 
         ws.current.onerror = (err) => {
@@ -49,9 +49,12 @@ export default function Home() {
             <div className="p-4 font-bold">GhostJam</div>
             <div className="flex flex-row">
                 <Instruments />
-                <Webcam imgData={imgData} ws={ws.current} sendImage={sendImage} />
+                <Webcam
+                    imgData={imgData}
+                    ws={ws.current}
+                    sendImage={sendImage}
+                />
             </div>
-            
         </div>
     );
 }

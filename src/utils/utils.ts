@@ -43,6 +43,12 @@ export const instrumentOptions: InstrumentMeta[] = [
             "https://surikov.github.io/webaudiofontdata/sound/0560_JCLive_sf2_file.js",
         globalVar: "_tone_0560_JCLive_sf2_file",
     },
+    {
+        label: "Drums",
+        midi: -1,
+        scriptUrl: "",
+        globalVar: "",
+    },
 ];
 
 export const drumMappings: InstrumentMeta[] = [
