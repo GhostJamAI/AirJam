@@ -1,10 +1,13 @@
 "use client";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Instruments from "./components/Instruments";
 import Webcam from "./components/Webcam";
+import { WebsocketFrame } from "./types/WebsocketTypes";
 
 export default function Home() {
     const ws = useRef<WebSocket | null>(null);
+    const [imageStr, setImageStr] = useState("")
+    const [frameC, setFrameC] = useState(0)
 
     const connectWebSocket = () => {
         ws.current = new WebSocket("ws://localhost:8000/ws");
@@ -13,7 +16,12 @@ export default function Home() {
             console.log("WebSocket connected");
         };
 
-        ws.current.onmessage = (event) => {};
+        ws.current.onmessage = (event) => {
+            const res:WebsocketFrame = JSON.parse(event.data)
+
+            setImageStr(res.data)
+            setFrameC(Date.now())
+        };
 
         ws.current.onerror = (err) => {
             console.error("WebSocket error:", err);
@@ -36,9 +44,12 @@ export default function Home() {
 
     return (
         <div className="h-[100vh] w-[100vw] bg-white text-black">
-            <div className="p-1 font-bold">GhostJam</div>
-            <Instruments />
-            <Webcam ws={ws.current} sendImage={sendImage} />
+            <div className="p-4 font-bold">GhostJam</div>
+            <div className="flex flex-row">
+                <Instruments />
+                <Webcam recTime={frameC} imageStr={imageStr} ws={ws.current} sendImage={sendImage} />
+            </div>
+            
         </div>
     );
 }

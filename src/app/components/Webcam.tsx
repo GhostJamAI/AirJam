@@ -1,12 +1,15 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 type WebcamProps = {
-    ws: WebSocket | null;
-    sendImage: (v: string) => void;
-};
-export default function Webcam({ ws, sendImage }: WebcamProps) {
+    ws: WebSocket | null
+    recTime: number
+    sendImage: (v: string) => void
+    imageStr: string
+}
+export default function Webcam({ws, recTime, sendImage, imageStr}:WebcamProps) {
     const wcRef = useRef<HTMLVideoElement>(null);
     const cvRef = useRef<HTMLCanvasElement>(null);
+    const imgRef = useRef<HTMLImageElement>(null)
 
     const [streaming, setStreaming] = useState(false);
     const [frameTimeout, setFrameTimeout] = useState<NodeJS.Timeout>();
@@ -33,16 +36,13 @@ export default function Webcam({ ws, sendImage }: WebcamProps) {
         enableStream();
     }, [wcRef]); // Empty array ensures it runs once on mount
 
-    useEffect(() => {
-        if (streaming) setFlip(!flip);
-    }, [streaming]);
-
-    useEffect(() => {
-        if (streaming) {
-            takePicture();
-            setTimeout(() => setFlip(!flip), 100);
-        }
-    }, [flip]);
+    useEffect(()=>{
+        if(ws?.readyState != ws?.OPEN) return
+        
+        console.log(imageStr)
+        if(imgRef.current) imgRef.current.src = imageStr
+        takePicture()
+    },[recTime, ws?.readyState])
 
     function takePicture() {
         const cv = cvRef?.current;
@@ -55,8 +55,6 @@ export default function Webcam({ ws, sendImage }: WebcamProps) {
             const frame = cv.toDataURL("image/png");
 
             sendImage(frame);
-
-            console.log(frame);
         }
     }
 
@@ -66,10 +64,10 @@ export default function Webcam({ ws, sendImage }: WebcamProps) {
                 ref={wcRef}
                 autoPlay
                 playsInline
-                className="w-full border max-w-lg m-4 rounded shadow -scale-x-[100%]"
+                className="hidden"
             />
-            <canvas ref={cvRef} className="hidden" />
-            <button onClick={takePicture}>Take Frame</button>
+            <canvas ref={cvRef} className="hidden -scale-x-[100%]" />
+            <img ref={imgRef} className="-scale-x-[100%] m-2 border-2 border-amber-500 w-[50vw]"/>
         </div>
     );
 }

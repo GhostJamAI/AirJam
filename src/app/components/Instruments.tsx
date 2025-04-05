@@ -81,9 +81,7 @@ export default function Instruments() {
 
     return (
         <main style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-            <h1 style={{ fontSize: "1.75rem" }}>🎛️ Instrument Playground</h1>
-
-            <div style={{ marginBottom: "1rem" }}>
+            <div style={{ marginBottom: "0.25rem" }}>
                 <button
                     onClick={() => setTab("melody")}
                     style={{
@@ -106,7 +104,7 @@ export default function Instruments() {
             </div>
 
             {tab === "melody" && (
-                <div style={{ marginBottom: "1rem" }}>
+                <div style={{ marginBottom: "0.5rem" }}>
                     <label htmlFor="instrument-select">
                         🎵 Select Instrument:
                     </label>
