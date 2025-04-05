@@ -5,7 +5,8 @@ import { initWebAudioFont, instrumentOptions } from "../../utils/utils";
 type NoteRefData = {
     audioCtx: AudioContext | null;
     player: any | null;
-    noteObj: any | null;
+    sourceNode: any | null; // We'll store the actual AudioBufferSourceNode
+    gainNode: GainNode | null;
     startTime: number;
     timeoutId: ReturnType<typeof setTimeout> | null;
 };
@@ -16,68 +17,73 @@ export default function Instruments() {
         instrumentOptions[0]
     );
 
-    /**
-     * A separate ref for each of the 8 notes: each store their own
-     * AudioContext, WebAudioFontPlayer, indefinite note, startTime, etc.
-     */
+    // Each of our 8 notes uses its own context/player
     const c4Ref = useRef<NoteRefData>({
         audioCtx: null,
         player: null,
-        noteObj: null,
+        sourceNode: null,
+        gainNode: null,
         startTime: 0,
         timeoutId: null,
     });
+    // ... similarly for D4, E4, ...
     const d4Ref = useRef<NoteRefData>({
         audioCtx: null,
         player: null,
-        noteObj: null,
+        sourceNode: null,
+        gainNode: null,
         startTime: 0,
         timeoutId: null,
     });
     const e4Ref = useRef<NoteRefData>({
         audioCtx: null,
         player: null,
-        noteObj: null,
+        sourceNode: null,
+        gainNode: null,
         startTime: 0,
         timeoutId: null,
     });
     const f4Ref = useRef<NoteRefData>({
         audioCtx: null,
         player: null,
-        noteObj: null,
+        sourceNode: null,
+        gainNode: null,
         startTime: 0,
         timeoutId: null,
     });
     const g4Ref = useRef<NoteRefData>({
         audioCtx: null,
         player: null,
-        noteObj: null,
+        sourceNode: null,
+        gainNode: null,
         startTime: 0,
         timeoutId: null,
     });
     const a4Ref = useRef<NoteRefData>({
         audioCtx: null,
         player: null,
-        noteObj: null,
+        sourceNode: null,
+        gainNode: null,
         startTime: 0,
         timeoutId: null,
     });
     const b4Ref = useRef<NoteRefData>({
         audioCtx: null,
         player: null,
-        noteObj: null,
+        sourceNode: null,
+        gainNode: null,
         startTime: 0,
         timeoutId: null,
     });
     const c5Ref = useRef<NoteRefData>({
         audioCtx: null,
         player: null,
-        noteObj: null,
+        sourceNode: null,
+        gainNode: null,
         startTime: 0,
         timeoutId: null,
     });
 
-    // The 8 notes
     const melodyData = [
         { label: "C4", midi: 60, ref: c4Ref },
         { label: "D4", midi: 62, ref: d4Ref },
@@ -89,10 +95,7 @@ export default function Instruments() {
         { label: "C5", midi: 72, ref: c5Ref },
     ];
 
-    /**
-     * 1) Load the base scripts for the chosen instrument (just the .js data),
-     *    but we do NOT create a global AudioContext or player. We only do decoding inside each note on press.
-     */
+    // 1) Load instrument script data
     useEffect(() => {
         (async () => {
             setLoaded(false);
@@ -105,61 +108,70 @@ export default function Instruments() {
         })();
     }, [selectedInstrument]);
 
-    // No shared audioContext/player. Each note will do its own context/player on press.
+    // 2) For each note, we create context/player on press, so no global context/player here.
 
     /**
-     * On press:
-     * - Clear existing note/timeouts
-     * - Create a fresh AudioContext + Player
-     * - decodeAfterLoading for the selectedInstrument’s globalVar
-     * - queueWaveTable(..., 9999) indefinite
-     * - store them all in ref
+     * Press =>
+     *   - close old note if any
+     *   - create context/player
+     *   - create a GainNode
+     *   - pass that gainNode as 'destination' to queueWaveTable
+     *   - store the underlying AudioBufferSourceNode if we can
      */
     async function handleNoteDown(refData: NoteRefData, midi: number) {
-        // If there's an existing note, forcibly stop
+        // Cancel leftover timer from old note
         if (refData.timeoutId) {
             clearTimeout(refData.timeoutId);
             refData.timeoutId = null;
         }
-        if (refData.noteObj) {
-            stopAndClose(refData);
+        // If old note is playing, fade or close it
+        if (refData.sourceNode) {
+            fadeOutAndClose(refData, 0.25);
         }
 
-        // Create a brand-new AudioContext
+        // 1) Create new AudioContext
         const AudioContextClass =
             window.AudioContext || (window as any).webkitAudioContext;
-        refData.audioCtx = new AudioContextClass();
+        const ctx = new AudioContextClass();
+        refData.audioCtx = ctx;
 
-        // Create a brand-new player
-        const WebAudioFontPlayer = (window as any).WebAudioFontPlayer;
-        if (!WebAudioFontPlayer) return; // script not loaded
-        refData.player = new WebAudioFontPlayer();
+        // 2) New WebAudioFontPlayer
+        const WAFPlayer = (window as any).WebAudioFontPlayer;
+        if (!WAFPlayer) return;
+        const player = new WAFPlayer();
+        refData.player = player;
 
-        // decodeAfterLoading for the instrument
-        // Because we loaded the script data in initWebAudioFont, the global var is in window
-        refData.player.loader.decodeAfterLoading(
-            refData.audioCtx,
-            selectedInstrument.globalVar
-        );
+        // decode instrument
+        player.loader.decodeAfterLoading(ctx, selectedInstrument.globalVar);
 
-        // Start indefinite note
-        const now = refData.audioCtx.currentTime;
+        // 3) Create a GainNode, set initial gain=1
+        const gainNode = ctx.createGain();
+        gainNode.gain.value = 1;
+        gainNode.connect(ctx.destination);
+        refData.gainNode = gainNode;
+
+        // 4) queue indefinite note, but pass 'gainNode' as the "destination" param
+        const now = ctx.currentTime;
         const instrumentData = (window as any)[selectedInstrument.globalVar];
-        refData.noteObj = refData.player.queueWaveTable(
-            refData.audioCtx,
-            refData.audioCtx.destination,
+        // 'queueWaveTable(audioContext, destination, instrument, now, midi, duration)'
+        const noteObj = player.queueWaveTable(
+            ctx,
+            gainNode, // our custom gain node
             instrumentData,
             now,
             midi,
             9999
         );
+        refData.noteObj = noteObj;
         refData.startTime = now;
+
+        // If we need to track the actual AudioBufferSourceNode for a partial fade:
+        // noteObj might have waveSources[0].source. But let's see if we can do the fade purely on 'gainNode'
+        // We'll do the fade on 'gainNode' itself in fadeOutAndClose.
     }
 
     /**
-     * On release:
-     * If held >=1s => stop immediately
-     * Else schedule leftover time to reach 1s
+     * On release => if hold >=1s => fade, else schedule leftover
      */
     function handleNoteUp(refData: NoteRefData) {
         if (!refData.audioCtx || !refData.player || !refData.noteObj) return;
@@ -168,13 +180,12 @@ export default function Instruments() {
         const hold = now - refData.startTime;
 
         if (hold >= 1) {
-            stopAndClose(refData);
+            fadeOutAndClose(refData, 0.25);
         } else {
             const remain = 1 - hold;
             const tid = setTimeout(() => {
-                // If still the same note, stop
                 if (refData.noteObj) {
-                    stopAndClose(refData);
+                    fadeOutAndClose(refData, 0.25);
                 }
                 refData.timeoutId = null;
             }, remain * 1000);
@@ -183,42 +194,57 @@ export default function Instruments() {
     }
 
     /**
-     * Stop the indefinite note, then close that AudioContext, so it won't interfere with others
+     * Fade out the gain node over fadeSec, then stop the source, close context
      */
-    function stopAndClose(refData: NoteRefData) {
-        if (!refData.noteObj || !refData.audioCtx || !refData.player) return;
-
+    function fadeOutAndClose(refData: NoteRefData, fadeSec: number) {
         const ctx = refData.audioCtx;
-        const noteObj = refData.noteObj;
+        if (!ctx) return;
+
         const now = ctx.currentTime;
 
-        // Attempt waveSources stop
-        if (noteObj.waveSources && Array.isArray(noteObj.waveSources)) {
-            for (const waveSrc of noteObj.waveSources) {
-                if (waveSrc?.source) {
-                    waveSrc.source.stop(now);
-                }
-            }
-        } else if (typeof noteObj.stop === "function") {
-            // fallback
-            noteObj.stop(now);
-        } else if (typeof refData.player.cancelQueue === "function") {
-            // last fallback
-            refData.player.cancelQueue(ctx);
+        // If we have a custom gain node, we can do a fade
+        if (refData.gainNode) {
+            const g = refData.gainNode.gain;
+            g.cancelScheduledValues(now);
+            // ensure we start from current value
+            const curVal = g.value;
+            g.setValueAtTime(curVal, now);
+            g.linearRampToValueAtTime(0, now + fadeSec);
         }
 
-        // Clear references
-        refData.noteObj = null;
-        refData.player = null;
+        // Also schedule stopping the indefinite source at (now + fadeSec).
+        // Typically noteObj might have waveSources, but if not,
+        // we do 'cancelQueue' or something else. We'll try to rely on waveSources fallback:
+        if (refData.noteObj?.waveSources) {
+            for (const waveSrc of refData.noteObj.waveSources) {
+                const src = waveSrc?.source;
+                if (src) {
+                    src.stop(now + fadeSec);
+                }
+            }
+        } else if (typeof refData.noteObj?.stop === "function") {
+            refData.noteObj.stop(now + fadeSec);
+        } else if (typeof refData.player?.cancelQueue === "function") {
+            // fallback
+            setTimeout(() => {
+                refData.player.cancelQueue(ctx);
+            }, fadeSec * 1000);
+        }
 
-        // Actually close the AudioContext
-        refData.audioCtx.close();
-        refData.audioCtx = null;
+        // After fadeSec, clean up
+        setTimeout(() => {
+            refData.noteObj = null;
+            refData.player = null;
+            if (refData.audioCtx) {
+                refData.audioCtx.close();
+                refData.audioCtx = null;
+            }
+        }, fadeSec * 1000);
     }
 
     return (
         <main style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-            <h1>8-Note (Min 1s / indefinite) - Each with separate Player</h1>
+            <h1>Fade with Custom GainNode (Min 1s / indefinite hold)</h1>
 
             <div style={{ marginBottom: "1rem" }}>
                 <label
@@ -253,8 +279,8 @@ export default function Instruments() {
             {loaded && (
                 <>
                     <p>
-                        Each note uses its own player & AudioContext, so
-                        stopping one note won't stop another.
+                        Now we pass a custom GainNode to queueWaveTable, letting
+                        us fade out as we please, even for indefinite notes.
                     </p>
                     <div
                         style={{
