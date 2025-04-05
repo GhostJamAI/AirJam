@@ -1,204 +1,299 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import {
-    drumMappings,
-    initWebAudioFont,
-    instrumentOptions,
-} from "../../utils/utils";
+import { initWebAudioFont, instrumentOptions } from "../../utils/utils";
+
+type NoteRefData = {
+    audioCtx: AudioContext | null;
+    player: any | null;
+    noteObj: any | null;
+    startTime: number;
+    timeoutId: ReturnType<typeof setTimeout> | null;
+};
 
 export default function Instruments() {
-    const audioContextRef = useRef<AudioContext | null>(null);
-    const playerRef = useRef<any | null>(null);
     const [loaded, setLoaded] = useState(false);
-    const [tab, setTab] = useState<"melody" | "drums">("melody");
     const [selectedInstrument, setSelectedInstrument] = useState(
         instrumentOptions[0]
     );
-    const currentNoteRef = useRef<any | null>(null); // actual sound object, not just midi
 
-    const activeBank = tab === "melody" ? [selectedInstrument] : drumMappings;
+    /**
+     * A separate ref for each of the 8 notes: each store their own
+     * AudioContext, WebAudioFontPlayer, indefinite note, startTime, etc.
+     */
+    const c4Ref = useRef<NoteRefData>({
+        audioCtx: null,
+        player: null,
+        noteObj: null,
+        startTime: 0,
+        timeoutId: null,
+    });
+    const d4Ref = useRef<NoteRefData>({
+        audioCtx: null,
+        player: null,
+        noteObj: null,
+        startTime: 0,
+        timeoutId: null,
+    });
+    const e4Ref = useRef<NoteRefData>({
+        audioCtx: null,
+        player: null,
+        noteObj: null,
+        startTime: 0,
+        timeoutId: null,
+    });
+    const f4Ref = useRef<NoteRefData>({
+        audioCtx: null,
+        player: null,
+        noteObj: null,
+        startTime: 0,
+        timeoutId: null,
+    });
+    const g4Ref = useRef<NoteRefData>({
+        audioCtx: null,
+        player: null,
+        noteObj: null,
+        startTime: 0,
+        timeoutId: null,
+    });
+    const a4Ref = useRef<NoteRefData>({
+        audioCtx: null,
+        player: null,
+        noteObj: null,
+        startTime: 0,
+        timeoutId: null,
+    });
+    const b4Ref = useRef<NoteRefData>({
+        audioCtx: null,
+        player: null,
+        noteObj: null,
+        startTime: 0,
+        timeoutId: null,
+    });
+    const c5Ref = useRef<NoteRefData>({
+        audioCtx: null,
+        player: null,
+        noteObj: null,
+        startTime: 0,
+        timeoutId: null,
+    });
 
+    // The 8 notes
+    const melodyData = [
+        { label: "C4", midi: 60, ref: c4Ref },
+        { label: "D4", midi: 62, ref: d4Ref },
+        { label: "E4", midi: 64, ref: e4Ref },
+        { label: "F4", midi: 65, ref: f4Ref },
+        { label: "G4", midi: 67, ref: g4Ref },
+        { label: "A4", midi: 69, ref: a4Ref },
+        { label: "B4", midi: 71, ref: b4Ref },
+        { label: "C5", midi: 72, ref: c5Ref },
+    ];
+
+    /**
+     * 1) Load the base scripts for the chosen instrument (just the .js data),
+     *    but we do NOT create a global AudioContext or player. We only do decoding inside each note on press.
+     */
     useEffect(() => {
-        async function init() {
+        (async () => {
+            setLoaded(false);
             try {
-                await initWebAudioFont(activeBank);
+                await initWebAudioFont([selectedInstrument]);
                 setLoaded(true);
             } catch (err) {
-                console.error("Error loading WebAudioFont scripts:", err);
+                console.error("Error loading scripts:", err);
             }
+        })();
+    }, [selectedInstrument]);
+
+    // No shared audioContext/player. Each note will do its own context/player on press.
+
+    /**
+     * On press:
+     * - Clear existing note/timeouts
+     * - Create a fresh AudioContext + Player
+     * - decodeAfterLoading for the selectedInstrument’s globalVar
+     * - queueWaveTable(..., 9999) indefinite
+     * - store them all in ref
+     */
+    async function handleNoteDown(refData: NoteRefData, midi: number) {
+        // If there's an existing note, forcibly stop
+        if (refData.timeoutId) {
+            clearTimeout(refData.timeoutId);
+            refData.timeoutId = null;
         }
-        setLoaded(false); // reset loading on tab change
-        init();
-    }, [tab, selectedInstrument]);
+        if (refData.noteObj) {
+            stopAndClose(refData);
+        }
 
-    useEffect(() => {
-        if (!loaded) return;
-
+        // Create a brand-new AudioContext
         const AudioContextClass =
             window.AudioContext || (window as any).webkitAudioContext;
-        audioContextRef.current = new AudioContextClass();
+        refData.audioCtx = new AudioContextClass();
 
-        if (window.WebAudioFontPlayer) {
-            playerRef.current = new window.WebAudioFontPlayer();
-            for (const instrument of activeBank) {
-                playerRef.current.loader.decodeAfterLoading(
-                    audioContextRef.current,
-                    instrument.globalVar
-                );
+        // Create a brand-new player
+        const WebAudioFontPlayer = (window as any).WebAudioFontPlayer;
+        if (!WebAudioFontPlayer) return; // script not loaded
+        refData.player = new WebAudioFontPlayer();
+
+        // decodeAfterLoading for the instrument
+        // Because we loaded the script data in initWebAudioFont, the global var is in window
+        refData.player.loader.decodeAfterLoading(
+            refData.audioCtx,
+            selectedInstrument.globalVar
+        );
+
+        // Start indefinite note
+        const now = refData.audioCtx.currentTime;
+        const instrumentData = (window as any)[selectedInstrument.globalVar];
+        refData.noteObj = refData.player.queueWaveTable(
+            refData.audioCtx,
+            refData.audioCtx.destination,
+            instrumentData,
+            now,
+            midi,
+            9999
+        );
+        refData.startTime = now;
+    }
+
+    /**
+     * On release:
+     * If held >=1s => stop immediately
+     * Else schedule leftover time to reach 1s
+     */
+    function handleNoteUp(refData: NoteRefData) {
+        if (!refData.audioCtx || !refData.player || !refData.noteObj) return;
+
+        const now = refData.audioCtx.currentTime;
+        const hold = now - refData.startTime;
+
+        if (hold >= 1) {
+            stopAndClose(refData);
+        } else {
+            const remain = 1 - hold;
+            const tid = setTimeout(() => {
+                // If still the same note, stop
+                if (refData.noteObj) {
+                    stopAndClose(refData);
+                }
+                refData.timeoutId = null;
+            }, remain * 1000);
+            refData.timeoutId = tid;
+        }
+    }
+
+    /**
+     * Stop the indefinite note, then close that AudioContext, so it won't interfere with others
+     */
+    function stopAndClose(refData: NoteRefData) {
+        if (!refData.noteObj || !refData.audioCtx || !refData.player) return;
+
+        const ctx = refData.audioCtx;
+        const noteObj = refData.noteObj;
+        const now = ctx.currentTime;
+
+        // Attempt waveSources stop
+        if (noteObj.waveSources && Array.isArray(noteObj.waveSources)) {
+            for (const waveSrc of noteObj.waveSources) {
+                if (waveSrc?.source) {
+                    waveSrc.source.stop(now);
+                }
             }
+        } else if (typeof noteObj.stop === "function") {
+            // fallback
+            noteObj.stop(now);
+        } else if (typeof refData.player.cancelQueue === "function") {
+            // last fallback
+            refData.player.cancelQueue(ctx);
         }
 
-        return () => {
-            audioContextRef.current?.close?.();
-        };
-    }, [loaded, activeBank]);
+        // Clear references
+        refData.noteObj = null;
+        refData.player = null;
 
-    const playNote = (midi: number, globalVar: string) => {
-        const ctx = audioContextRef.current;
-        const player = playerRef.current;
-        const instrument = (window as any)[globalVar];
-        if (ctx && player && instrument) {
-            const now = ctx.currentTime;
-            const note = player.queueWaveTable(
-                ctx,
-                ctx.destination,
-                instrument,
-                now,
-                midi,
-                9999
-            );
-            currentNoteRef.current = note;
-        }
-    };
-
-    const stopNote = () => {
-        const ctx = audioContextRef.current;
-        if (ctx && currentNoteRef.current?.stop) {
-            currentNoteRef.current.stop(ctx.currentTime);
-            currentNoteRef.current = null;
-        }
-    };
+        // Actually close the AudioContext
+        refData.audioCtx.close();
+        refData.audioCtx = null;
+    }
 
     return (
         <main style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-            <h1 style={{ fontSize: "1.75rem" }}>🎛️ Instrument Playground</h1>
+            <h1>8-Note (Min 1s / indefinite) - Each with separate Player</h1>
 
             <div style={{ marginBottom: "1rem" }}>
-                <button
-                    onClick={() => setTab("melody")}
-                    style={{
-                        padding: "0.5rem 1rem",
-                        marginRight: "1rem",
-                        fontWeight: tab === "melody" ? "bold" : "normal",
-                    }}
+                <label
+                    htmlFor="instrument-select"
+                    style={{ marginRight: "0.5rem" }}
                 >
-                    🎹 Instruments
-                </button>
-                <button
-                    onClick={() => setTab("drums")}
-                    style={{
-                        padding: "0.5rem 1rem",
-                        fontWeight: tab === "drums" ? "bold" : "normal",
+                    🎵 Select Instrument:
+                </label>
+                <select
+                    id="instrument-select"
+                    onChange={(e) => {
+                        const chosen = instrumentOptions.find(
+                            (opt) => opt.label === e.target.value
+                        );
+                        if (chosen) {
+                            setLoaded(false);
+                            setSelectedInstrument(chosen);
+                        }
                     }}
+                    value={selectedInstrument.label}
                 >
-                    🥁 Drums
-                </button>
+                    {instrumentOptions.map((inst) => (
+                        <option key={inst.label} value={inst.label}>
+                            {inst.label}
+                        </option>
+                    ))}
+                </select>
             </div>
 
-            {tab === "melody" && (
-                <div style={{ marginBottom: "1rem" }}>
-                    <label htmlFor="instrument-select">
-                        🎵 Select Instrument:
-                    </label>
-                    <select
-                        id="instrument-select"
-                        onChange={(e) => {
-                            const selected = instrumentOptions.find(
-                                (i) => i.label === e.target.value
-                            );
-                            if (selected) {
-                                setSelectedInstrument(selected);
-                            }
-                        }}
-                        value={selectedInstrument.label}
-                    >
-                        {instrumentOptions.map((inst) => (
-                            <option key={inst.label} value={inst.label}>
-                                {inst.label}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            )}
-
-            {!loaded && <p>Loading sounds...</p>}
+            {!loaded && <p>Loading instrument data…</p>}
 
             {loaded && (
-                <div
-                    style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}
-                >
-                    {tab === "melody"
-                        ? [
-                              { label: "C4", midi: 60 },
-                              { label: "D4", midi: 62 },
-                              { label: "E4", midi: 64 },
-                              { label: "F4", midi: 65 },
-                              { label: "G4", midi: 67 },
-                              { label: "A4", midi: 69 },
-                              { label: "B4", midi: 71 },
-                              { label: "C5", midi: 72 },
-                          ].map((note) => (
-                              <button
-                                  key={note.midi}
-                                  onMouseDown={() =>
-                                      playNote(
-                                          note.midi,
-                                          selectedInstrument.globalVar
-                                      )
-                                  }
-                                  onMouseUp={stopNote}
-                                  onMouseLeave={stopNote}
-                                  onTouchStart={() =>
-                                      playNote(
-                                          note.midi,
-                                          selectedInstrument.globalVar
-                                      )
-                                  }
-                                  onTouchEnd={stopNote}
-                                  style={buttonStyle}
-                              >
-                                  {note.label}
-                              </button>
-                          ))
-                        : drumMappings.map((drum) => (
-                              <button
-                                  key={drum.midi}
-                                  onMouseDown={() =>
-                                      playNote(drum.midi, drum.globalVar)
-                                  }
-                                  onMouseUp={stopNote}
-                                  onMouseLeave={stopNote}
-                                  onTouchStart={() =>
-                                      playNote(drum.midi, drum.globalVar)
-                                  }
-                                  onTouchEnd={stopNote}
-                                  style={buttonStyle}
-                              >
-                                  {drum.label}
-                              </button>
-                          ))}
-                </div>
+                <>
+                    <p>
+                        Each note uses its own player & AudioContext, so
+                        stopping one note won't stop another.
+                    </p>
+                    <div
+                        style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: "0.5rem",
+                        }}
+                    >
+                        {melodyData.map((item) => (
+                            <button
+                                key={item.midi}
+                                onMouseDown={() =>
+                                    handleNoteDown(item.ref.current, item.midi)
+                                }
+                                onMouseUp={() => handleNoteUp(item.ref.current)}
+                                onTouchStart={() =>
+                                    handleNoteDown(item.ref.current, item.midi)
+                                }
+                                onTouchEnd={() =>
+                                    handleNoteUp(item.ref.current)
+                                }
+                                style={{
+                                    padding: "1rem",
+                                    minWidth: "3rem",
+                                    fontSize: "1rem",
+                                    fontWeight: "bold",
+                                    borderRadius: "0.5rem",
+                                    border: "2px solid #444",
+                                    backgroundColor: "#f0f0f0",
+                                    cursor: "pointer",
+                                    boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                                }}
+                            >
+                                {item.label}
+                            </button>
+                        ))}
+                    </div>
+                </>
             )}
         </main>
     );
 }
-
-const buttonStyle: React.CSSProperties = {
-    padding: "1rem",
-    border: "1px solid #333",
-    borderRadius: "8px",
-    backgroundColor: "#f0f0f0",
-    cursor: "pointer",
-    fontWeight: "bold",
-    minWidth: "3rem",
-};

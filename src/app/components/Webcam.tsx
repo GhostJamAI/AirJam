@@ -4,16 +4,16 @@ type WebcamProps = {
     ws: WebSocket | null;
     sendImage: (v: string) => void;
 };
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function Webcam({ ws, sendImage }: WebcamProps) {
     const wcRef = useRef<HTMLVideoElement>(null);
     const cvRef = useRef<HTMLCanvasElement>(null);
 
     const [streaming, setStreaming] = useState(false);
-    const [frameTimeout, setFrameTimeout] = useState<NodeJS.Timeout>();
     const [flip, setFlip] = useState(false);
 
-    let w = 320;
-    let h = 180;
+    const w = 320;
+    const h = 180;
     useEffect(() => {
         const enableStream = async () => {
             try {
