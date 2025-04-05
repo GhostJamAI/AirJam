@@ -1,6 +1,6 @@
 "use client";
 import { useRef } from "react";
-import NotePlayer from "./components/Instruments";
+import Instruments from "./components/Instruments";
 import Webcam from "./components/Webcam";
 
 export default function Home() {
@@ -37,8 +37,8 @@ export default function Home() {
     return (
         <div className="h-[100vh] w-[100vw] bg-white text-black">
             <div className="p-1 font-bold">GhostJam</div>
-            <Webcam ws={ws.current} sendImage={sendImage}/>
-            {/*<NotePlayer />*/}
+            <Instruments />
+            <Webcam ws={ws.current} sendImage={sendImage} />
         </div>
     );
 }

@@ -1,11 +1,10 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { WebsocketMessage } from "../types/WebsocketTypes";
 type WebcamProps = {
-    ws: WebSocket | null
-    sendImage: (v: string) => void
-}
-export default function Webcam({ws, sendImage}:WebcamProps) {
+    ws: WebSocket | null;
+    sendImage: (v: string) => void;
+};
+export default function Webcam({ ws, sendImage }: WebcamProps) {
     const wcRef = useRef<HTMLVideoElement>(null);
     const cvRef = useRef<HTMLCanvasElement>(null);
 
@@ -13,20 +12,19 @@ export default function Webcam({ws, sendImage}:WebcamProps) {
     const [frameTimeout, setFrameTimeout] = useState<NodeJS.Timeout>();
     const [flip, setFlip] = useState(false);
 
-    let w = 320
-    let h = 180
+    let w = 320;
+    let h = 180;
     useEffect(() => {
         const enableStream = async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: {advanced:[{aspectRatio:{exact:16/9}}]},
+                    video: { advanced: [{ aspectRatio: { exact: 16 / 9 } }] },
                 });
-                
+
                 if (wcRef.current) {
                     wcRef.current.srcObject = stream;
                     setStreaming(true);
                 }
-                    
             } catch (error) {
                 console.error("Error accessing webcam:", error);
             }
@@ -36,16 +34,15 @@ export default function Webcam({ws, sendImage}:WebcamProps) {
     }, [wcRef]); // Empty array ensures it runs once on mount
 
     useEffect(() => {
-        if (streaming) setFlip(!flip)
+        if (streaming) setFlip(!flip);
     }, [streaming]);
 
-    useEffect(()=>{
-        if(streaming)
-        {
-            takePicture()
-            setTimeout(()=>setFlip(!flip),100)
+    useEffect(() => {
+        if (streaming) {
+            takePicture();
+            setTimeout(() => setFlip(!flip), 100);
         }
-    },[flip])
+    }, [flip]);
 
     function takePicture() {
         const cv = cvRef?.current;
