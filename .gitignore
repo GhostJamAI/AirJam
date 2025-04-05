@@ -42,5 +42,6 @@ next-env.d.ts
 
 #backend temp
 backend/__pycache__/*
-backend/uploads/
+backend/uploads/*
+backend/venv/*
 
