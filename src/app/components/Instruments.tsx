@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { initWebAudioFont, instrumentOptions } from "../../utils/utils";
@@ -5,10 +6,11 @@ import { initWebAudioFont, instrumentOptions } from "../../utils/utils";
 type NoteRefData = {
     audioCtx: AudioContext | null;
     player: any | null;
-    sourceNode: any | null; // We'll store the actual AudioBufferSourceNode
+    sourceNode: any | null;
     gainNode: GainNode | null;
     startTime: number;
     timeoutId: ReturnType<typeof setTimeout> | null;
+    noteObj: any | null; // Added noteObj property
 };
 
 export default function Instruments() {
@@ -25,6 +27,7 @@ export default function Instruments() {
         gainNode: null,
         startTime: 0,
         timeoutId: null,
+        noteObj: null, // Added noteObj property
     });
     // ... similarly for D4, E4, ...
     const d4Ref = useRef<NoteRefData>({
@@ -34,6 +37,7 @@ export default function Instruments() {
         gainNode: null,
         startTime: 0,
         timeoutId: null,
+        noteObj: null, // Added noteObj property
     });
     const e4Ref = useRef<NoteRefData>({
         audioCtx: null,
@@ -42,6 +46,7 @@ export default function Instruments() {
         gainNode: null,
         startTime: 0,
         timeoutId: null,
+        noteObj: null, // Added noteObj property
     });
     const f4Ref = useRef<NoteRefData>({
         audioCtx: null,
@@ -50,6 +55,7 @@ export default function Instruments() {
         gainNode: null,
         startTime: 0,
         timeoutId: null,
+        noteObj: null, // Added noteObj property
     });
     const g4Ref = useRef<NoteRefData>({
         audioCtx: null,
@@ -58,6 +64,7 @@ export default function Instruments() {
         gainNode: null,
         startTime: 0,
         timeoutId: null,
+        noteObj: null, // Added noteObj property
     });
     const a4Ref = useRef<NoteRefData>({
         audioCtx: null,
@@ -66,6 +73,7 @@ export default function Instruments() {
         gainNode: null,
         startTime: 0,
         timeoutId: null,
+        noteObj: null, // Added noteObj property
     });
     const b4Ref = useRef<NoteRefData>({
         audioCtx: null,
@@ -74,6 +82,7 @@ export default function Instruments() {
         gainNode: null,
         startTime: 0,
         timeoutId: null,
+        noteObj: null, // Added noteObj property
     });
     const c5Ref = useRef<NoteRefData>({
         audioCtx: null,
@@ -82,6 +91,7 @@ export default function Instruments() {
         gainNode: null,
         startTime: 0,
         timeoutId: null,
+        noteObj: null, // Added noteObj property
     });
 
     const melodyData = [
