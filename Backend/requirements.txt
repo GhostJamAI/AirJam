@@ -1,3 +1,4 @@
 fastapi==0.115.12
 opencv_contrib_python==4.10.0.84
 opencv_python==4.10.0.84
+ultralytics
