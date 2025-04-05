@@ -1,8 +1,43 @@
+"use client"
 import Image from "next/image";
+import { useRef } from "react";
 
 export default function Home() {
+  const ws = useRef<WebSocket | null>(null);
+
+  const connectWebSocket = () => {
+    ws.current = new WebSocket("ws://localhost:8000/ws");
+
+    ws.current.onopen = () => {
+      console.log("WebSocket connected");
+    };
+
+    ws.current.onmessage = (event) => {
+      
+    };
+
+    ws.current.onerror = (err) => {
+      console.error("WebSocket error:", err);
+    };
+  };
+
+  const sendImage = async (base64: string) => {
+    if (!ws.current || ws.current.readyState !== WebSocket.OPEN) {
+      connectWebSocket();
+      await new Promise((res) => setTimeout(res, 500));
+    }
+  
+    // Optional: Send as JSON with filename
+    const payload = JSON.stringify({
+      data: base64,
+    });
+  
+    ws.current!.send(payload);
+  };
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+      <button onClick={() => {sendImage("pipeline.png")}}>Hello Click Me</button>
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
         <Image
           className="dark:invert"
