@@ -41,5 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 #backend temp
-/Backend/uploads/*
-/Backend/__pycache__/*
+backend/__pycache__/*
+backend/uploads/
+
