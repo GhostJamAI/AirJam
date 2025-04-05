@@ -12,14 +12,13 @@ export default function Webcam() {
         const enableStream = async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: {advanced:[{aspectRatio:{exact:16/9}}]},
+                    video: { advanced: [{ aspectRatio: { exact: 16 / 9 } }] },
                 });
-                
+
                 if (wcRef.current) {
                     wcRef.current.srcObject = stream;
                     setStreaming(true);
                 }
-                    
             } catch (error) {
                 console.error("Error accessing webcam:", error);
             }
@@ -36,14 +35,10 @@ export default function Webcam() {
     function takePicture() {
         const cv = cvRef?.current;
         const context = cv?.getContext("2d");
-        console.log(context);
         if (cv && context && wcRef.current) {
             cv.width = 1280;
             cv.height = 720;
             context.drawImage(wcRef.current, 0, 0, 1280, 720);
-
-            const data = cv.toDataURL("image/png");
-            console.log(data);
         }
     }
 
