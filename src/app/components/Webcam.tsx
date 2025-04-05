@@ -12,13 +12,14 @@ export default function Webcam() {
         const enableStream = async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: true,
+                    video: {advanced:[{aspectRatio:{exact:16/9}}]},
                 });
+                
                 if (wcRef.current) {
-                    stream.getVideoTracks()[0].applyConstraints({aspectRatio:16/9})
                     wcRef.current.srcObject = stream;
                     setStreaming(true);
                 }
+                    
             } catch (error) {
                 console.error("Error accessing webcam:", error);
             }
@@ -52,7 +53,7 @@ export default function Webcam() {
                 ref={wcRef}
                 autoPlay
                 playsInline
-                className="w-full border max-w-lg rounded shadow -scale-x-[100%]"
+                className="w-full border max-w-lg m-4 rounded shadow -scale-x-[100%]"
             />
             <canvas ref={cvRef} className="hidden" />
             <button onClick={takePicture}>Take Frame</button>
