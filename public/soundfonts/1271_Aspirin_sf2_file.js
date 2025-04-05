@@ -1,5 +1,5 @@
 console.log('load _tone_1271_Aspirin_sf2_file');
-var _tone_1271_Aspirin_sf2_file={
+const _tone_1271_Aspirin_sf2_file={
 	zones:[
 		{
 			midi:127
@@ -18,3 +18,5 @@ var _tone_1271_Aspirin_sf2_file={
 		}
 	]
 };
+
+export default _tone_1271_Aspirin_sf2_file;

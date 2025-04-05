@@ -1,5 +1,5 @@
 console.log('load _tone_0982_GeneralUserGS_sf2_file');
-var _tone_0982_GeneralUserGS_sf2_file={
+const _tone_0982_GeneralUserGS_sf2_file={
 	zones:[
 		{
 			midi:98
@@ -48,3 +48,5 @@ var _tone_0982_GeneralUserGS_sf2_file={
 		}
 	]
 };
+
+export default _tone_0982_GeneralUserGS_sf2_file;

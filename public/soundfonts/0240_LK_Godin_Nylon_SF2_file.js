@@ -1,5 +1,5 @@
 console.log('load _tone_0240_LK_Godin_Nylon_SF2_file');
-var _tone_0240_LK_Godin_Nylon_SF2_file={
+const _tone_0240_LK_Godin_Nylon_SF2_file={
 	zones:[
 		{
 			midi:24
@@ -138,3 +138,5 @@ var _tone_0240_LK_Godin_Nylon_SF2_file={
 		}
 	]
 };
+
+export default _tone_0240_LK_Godin_Nylon_SF2_file;

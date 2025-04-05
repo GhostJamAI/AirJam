@@ -1,5 +1,5 @@
 console.log('load _tone_0530_Soul_Ahhs_sf2_file');
-var _tone_0530_Soul_Ahhs_sf2_file={
+const _tone_0530_Soul_Ahhs_sf2_file={
 	zones:[
 		{
 			midi:53
@@ -258,3 +258,5 @@ var _tone_0530_Soul_Ahhs_sf2_file={
 		}
 	]
 };
+
+export default _tone_0530_Soul_Ahhs_sf2_file;

@@ -1,5 +1,5 @@
 console.log('load _tone_1220_SoundBlasterOld_sf2');
-var _tone_1220_SoundBlasterOld_sf2={
+const _tone_1220_SoundBlasterOld_sf2={
 	zones:[
 		{
 			midi:122
@@ -59,3 +59,5 @@ var _tone_1220_SoundBlasterOld_sf2={
 		}
 	]
 };
+
+export default _tone_1220_SoundBlasterOld_sf2;

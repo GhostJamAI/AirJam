@@ -1,5 +1,5 @@
 console.log('load _tone_0601_FluidR3_GM_sf2_file');
-var _tone_0601_FluidR3_GM_sf2_file={
+const _tone_0601_FluidR3_GM_sf2_file={
 	zones:[
 		{
 			midi:60
@@ -108,3 +108,5 @@ var _tone_0601_FluidR3_GM_sf2_file={
 		}
 	]
 };
+
+export default _tone_0601_FluidR3_GM_sf2_file;

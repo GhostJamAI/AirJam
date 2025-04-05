@@ -1,5 +1,5 @@
 console.log('load _tone_1020_JCLive_sf2_file');
-var _tone_1020_JCLive_sf2_file={
+const _tone_1020_JCLive_sf2_file={
 	zones:[
 		{
 			midi:102
@@ -273,3 +273,5 @@ var _tone_1020_JCLive_sf2_file={
 		}
 	]
 };
+
+export default _tone_1020_JCLive_sf2_file;

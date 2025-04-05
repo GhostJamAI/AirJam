@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { WebAudioFontPlayer } from "webaudiofont";
 
 // Load one of the default instruments (Acoustic Grand Piano)
-import _tone_0000_AcousticGrandPiano from "../public/soundfonts/0000_AcousticGrandPiano_sf2_file.js";
+import _tone_0000_AcousticGrandPiano from "../../../public/soundfonts/0090_JCLive_sf2_file";
 
 // Notes you want to support
 const NOTES = ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"];

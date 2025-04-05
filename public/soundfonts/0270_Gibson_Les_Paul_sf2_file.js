@@ -1,5 +1,5 @@
 console.log('load _tone_0270_Gibson_Les_Paul_sf2_file');
-var _tone_0270_Gibson_Les_Paul_sf2_file={
+const _tone_0270_Gibson_Les_Paul_sf2_file={
 	zones:[
 		{
 			midi:27
@@ -33,3 +33,5 @@ var _tone_0270_Gibson_Les_Paul_sf2_file={
 		}
 	]
 };
+
+export default _tone_0270_Gibson_Les_Paul_sf2_file;

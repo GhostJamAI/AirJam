@@ -1,5 +1,5 @@
 console.log('load _tone_1090_Chaos_sf2_file');
-var _tone_1090_Chaos_sf2_file={
+const _tone_1090_Chaos_sf2_file={
 	zones:[
 		{
 			midi:109
@@ -108,3 +108,5 @@ var _tone_1090_Chaos_sf2_file={
 		}
 	]
 };
+
+export default _tone_1090_Chaos_sf2_file;

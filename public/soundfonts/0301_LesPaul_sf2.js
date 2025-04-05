@@ -1,5 +1,5 @@
 console.log('load _tone_0301_LesPaul_sf2');
-var _tone_0301_LesPaul_sf2={
+const _tone_0301_LesPaul_sf2={
 	zones:[
 		{
 			midi:30
@@ -465,3 +465,5 @@ var _tone_0301_LesPaul_sf2={
 		}
 	]
 };
+
+export default _tone_0301_LesPaul_sf2;

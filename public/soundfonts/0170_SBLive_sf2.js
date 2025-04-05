@@ -1,5 +1,5 @@
 console.log('load _tone_0170_SBLive_sf2');
-var _tone_0170_SBLive_sf2={
+const _tone_0170_SBLive_sf2={
 	zones:[
 		{
 			midi:17
@@ -73,3 +73,5 @@ var _tone_0170_SBLive_sf2={
 		}
 	]
 };
+
+export default _tone_0170_SBLive_sf2;

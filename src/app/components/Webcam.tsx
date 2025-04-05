@@ -5,8 +5,8 @@ export default function Webcam() {
     const wcRef = useRef<HTMLVideoElement>(null);
     const cvRef = useRef<HTMLCanvasElement>(null);
 
-    const [streaming, setStreaming] = useState(false)
-    const [frameTimeout, setFrameTimeout] = useState<NodeJS.Timeout>()
+    const [streaming, setStreaming] = useState(false);
+    const [frameTimeout, setFrameTimeout] = useState<NodeJS.Timeout>();
 
     useEffect(() => {
         const enableStream = async () => {
@@ -15,8 +15,9 @@ export default function Webcam() {
                     video: true,
                 });
                 if (wcRef.current) {
+                    stream.getVideoTracks()[0].applyConstraints({aspectRatio:16/9})
                     wcRef.current.srcObject = stream;
-                    setStreaming(true)
+                    setStreaming(true);
                 }
             } catch (error) {
                 console.error("Error accessing webcam:", error);
@@ -26,12 +27,10 @@ export default function Webcam() {
         enableStream();
     }, [wcRef]); // Empty array ensures it runs once on mount
 
-    useEffect(()=>{
-        if(streaming)
-        {
-            setFrameTimeout(setInterval(takePicture, ))
-        }
-    },[streaming])
+    useEffect(() => {
+        if (streaming) setFrameTimeout(setInterval(takePicture, 100));
+        else setFrameTimeout(undefined);
+    }, [streaming]);
 
     function takePicture() {
         const cv = cvRef?.current;
@@ -55,7 +54,7 @@ export default function Webcam() {
                 playsInline
                 className="w-full border max-w-lg rounded shadow -scale-x-[100%]"
             />
-            <canvas ref={cvRef} className="w-[1280px] h-[720px]" />
+            <canvas ref={cvRef} className="hidden" />
             <button onClick={takePicture}>Take Frame</button>
         </div>
     );
