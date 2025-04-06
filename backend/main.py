@@ -7,6 +7,7 @@ import os
 import json
 import cv2
 import asyncio
+import mediapipe as mp
 from ultralytics.models import YOLO
 
 class Rectangle:
@@ -23,6 +24,18 @@ class Rectangle:
         self.x2 = x2
         self.y1 = y1
         self.y2 = y2
+
+# mp_hands = mp.solutions.hands
+# hands = mp_hands.Hands(static_image_mode=True, max_num_hands=10, min_detection_confidence=0.3, min_tracking_confidence=0.2, model_complexity=1)
+# mp_draw = mp.solutions.drawing_utils
+
+mp_pose = mp.solutions.pose
+mp_pose_model = mp_pose.Pose(static_image_mode=False,
+                    model_complexity=2,
+                    enable_segmentation=False,
+                    min_detection_confidence=0.5,
+                    min_tracking_confidence=0.5)
+mp_draw = mp.solutions.drawing_utils
 
 pose = YOLO("yolo11n-pose.pt")
 app = FastAPI()
@@ -46,6 +59,7 @@ async def websocket_endpoint(websocket: WebSocket):
             # Parse JSON
             payload = json.loads(data)
 
+            multiplayer = False
             base64_data = payload["data"]
 
             # Get proper payload from base64 data
@@ -58,7 +72,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 f.write(image_bytes)
             print(f"Saved {random_filename}")
 
-            send_data = await asyncio.to_thread(alter_image, file_path)
+            send_data = await asyncio.to_thread(alter_image, file_path, multiplayer)
             await websocket.send_text(json.dumps({"data": send_data["data"], "cols": send_data["cols"]}))
     except WebSocketDisconnect:
         if os.path.exists(file_path):
@@ -67,11 +81,8 @@ async def websocket_endpoint(websocket: WebSocket):
         else:
             print(f"[Missing] File was not found: {random_filename}")
 
-def alter_image(file_path):
-    img_rgb = cv2.imread(file_path)
-    #img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    #edges = cv2.Canny(img, 100, 200)
 
+def alter_yolo(img_rgb, handPts):
     poseRes = pose(img_rgb, conf=0.3)
     pts = poseRes[0].keypoints.data
 
@@ -90,33 +101,11 @@ def alter_image(file_path):
         #(14, 16),  # Right leg
     ]
 
-    handPts = []
-
     for person in pts:
         kps = person.cpu().numpy()
         if kps.size == 0:  # Skip if no keypoints are detected
             continue
 
-        """
-        # Draw skeleton connections
-        for start_idx, end_idx in skeleton:
-            # Check if keypoint indices are valid
-            if start_idx < len(kps) and end_idx < len(kps):
-                start_kp = kps[start_idx]
-                end_kp = kps[end_idx]
-                # Check if both keypoints have sufficient confidence
-                if start_kp[2] > 0.3 and end_kp[2] > 0.3:  # Confidence threshold
-                    start_x, start_y = int(start_kp[0]), int(start_kp[1])
-                    end_x, end_y = int(end_kp[0]), int(end_kp[1])
-                    # Ensure the coordinates are within the image bounds
-                    if 0 <= start_x < img_rgb.shape[1] and 0 <= start_y < img_rgb.shape[0] and 0 <= end_x < img_rgb.shape[1] and 0 <= end_y < img_rgb.shape[0]:
-                        if start_x == 0 and start_y == 0:
-                            continue
-                        if end_x == 0 and end_y == 0:
-                            continue
-                        cv2.line(img_rgb, (start_x, start_y), (end_x, end_y), (0, 0, 255), 2)  # Blue lines
-        """
-        
         # Draw keypoints
         for i in range(9,11):
             kp = kps[i]
@@ -129,6 +118,35 @@ def alter_image(file_path):
                     if 0 <= x < img_rgb.shape[1] and 0 <= y < img_rgb.shape[0]:
                         cv2.circle(img_rgb, (x, y), 3, (255, 0, 0), -1)  # Red points
 
+
+def alter_mediapipe(img_rgb, handPts):
+    result = mp_pose_model.process(img_rgb)
+
+
+    HAND_LANDMARKS = [
+        mp_pose.PoseLandmark.LEFT_WRIST,
+        mp_pose.PoseLandmark.RIGHT_WRIST,
+    ]
+
+    # Draw pose landmarks
+    if result.pose_landmarks:
+        for idx in HAND_LANDMARKS:
+            landmark = result.pose_landmarks.landmark[idx]
+            h, w, _ = img_rgb.shape
+            x, y = int(landmark.x * w), int(landmark.y * h)
+            handPts.append((x, y, landmark.visibility))
+            cv2.circle(img_rgb, (x, y), 6, (0, 255, 0), cv2.FILLED)
+
+def alter_image(file_path, multiplayer):
+    img_rgb = cv2.imread(file_path)
+
+    handPts = []
+
+    if (multiplayer):
+        alter_yolo(img_rgb, handPts)
+    else:
+        alter_mediapipe(img_rgb, handPts)
+   
     n = 8
     wOff = int(w/n)
     pad = 4
