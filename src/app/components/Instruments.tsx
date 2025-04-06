@@ -449,7 +449,9 @@ export default function Instruments({
                 </button>
             </div>
             <div className="border border-gray-600 my-2" />
-            <div className="text-[32px] font-serif font-bold text-center">{selectedInstrument.label}</div>
+            <div className="text-[32px] font-serif font-bold text-center">
+                {selectedInstrument.label}
+            </div>
             <div className="text-xl font-serif font-extralight text-center">
                 {`~ ${selectedInstrument.group
                     .charAt(0)
@@ -472,7 +474,10 @@ export default function Instruments({
                             {noteMapRef.current[v.label].map((e, i) => {
                                 return (
                                     e.repeatStage != 0 && (
-                                        <div className="font-bold font-serif">
+                                        <div
+                                            className="font-bold font-serif"
+                                            key={i}
+                                        >
                                             {v.label}
                                             <div className="font-normal flex flex-row pl-4">
                                                 {`${
@@ -481,14 +486,22 @@ export default function Instruments({
                                                         : indToNote[i]
                                                 }:`}
                                                 <div className="grid grid-cols-6 gap-1 pl-2 my-auto">
-                                                    {
-                                                        arrayRange(1,5,1).map((v)=>{
-                                                            if(v <= e.repeatStage)
-                                                            return(<div className="rounded-full shadow size-[1.2vw] text-transparent bg-secondary">
-                                                                #
-                                                            </div>)
-                                                        })
-                                                    }
+                                                    {arrayRange(1, 5, 1).map(
+                                                        (v) => {
+                                                            if (
+                                                                v <=
+                                                                e.repeatStage
+                                                            )
+                                                                return (
+                                                                    <div
+                                                                        key={v}
+                                                                        className="rounded-full shadow size-[1.2vw] text-transparent bg-secondary"
+                                                                    >
+                                                                        #
+                                                                    </div>
+                                                                );
+                                                        }
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

@@ -278,7 +278,7 @@ export const drumMappings: DrumMappings[] = [
 ];
 
 export const loadScript = (src: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         if (document.querySelector(`script[src="${src}"]`)) {
             resolve();
             return;
@@ -287,7 +287,6 @@ export const loadScript = (src: string): Promise<void> => {
         script.src = src;
         script.async = true;
         script.onload = () => resolve();
-        script.onerror = () => reject(new Error(`Failed to load ${src}`));
         document.body.appendChild(script);
     });
 };

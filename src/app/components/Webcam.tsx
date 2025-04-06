@@ -2,10 +2,10 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import { instrumentOptions } from "@/utils/utils";
+import { ArrowBigLeft, ArrowBigRight } from "lucide-react";
 import { RefObject, useEffect, useRef, useState } from "react";
 import { ImgData } from "../types/WebsocketTypes";
 import { NoteMap } from "./Instruments";
-import { ArrowBigLeft, ArrowBigRight, ArrowLeft, ArrowRight, MoveLeft, MoveRight } from "lucide-react";
 
 const arrayRange = (start: number, stop: number, step = 1) =>
     Array.from(
@@ -182,7 +182,7 @@ export default function Webcam({
                                     : "bg-[#EFF1ED75]"
                             }`}
                         >
-                            <ArrowBigLeft className="size-16"/>
+                            <ArrowBigLeft className="size-16" />
                         </div>
 
                         {/* Center three buttons */}
@@ -232,7 +232,7 @@ export default function Webcam({
                                     : "bg-[#EFF1ED75]"
                             }`}
                         >
-                            <ArrowBigRight className="size-16"/>
+                            <ArrowBigRight className="size-16" />
                         </div>
                     </div>
                     <div
@@ -265,17 +265,36 @@ export default function Webcam({
                                         </div>
 
                                         <div className="grid grid-cols-5 gap-2 pl-2 pr-3 py-2">
-                                            {noteMapRef?.current && noteMapRef?.current[instrumentOptions[instI].label] &&
-                                            noteMapRef?.current[instrumentOptions[instI].label][i].repeatStage > 0 ?
-                                                arrayRange(1,5,1).map((v)=>{
-                                                    if(v <= noteMapRef?.current[instrumentOptions[instI].label][i].repeatStage)
-                                                    return(<div className="rounded-full shadow border-2 border-primary size-[1.2vw] text-transparent bg-secondary">
-                                                        #
-                                                    </div>)
+                                            {noteMapRef?.current &&
+                                            noteMapRef?.current[
+                                                instrumentOptions[instI].label
+                                            ] &&
+                                            noteMapRef?.current[
+                                                instrumentOptions[instI].label
+                                            ][i].repeatStage > 0 ? (
+                                                arrayRange(1, 5, 1).map((v) => {
+                                                    if (
+                                                        v <=
+                                                        noteMapRef?.current[
+                                                            instrumentOptions[
+                                                                instI
+                                                            ].label
+                                                        ][i].repeatStage
+                                                    )
+                                                        return (
+                                                            <div
+                                                                key={v}
+                                                                className="rounded-full shadow border-2 border-primary size-[1.2vw] text-transparent bg-secondary"
+                                                            >
+                                                                #
+                                                            </div>
+                                                        );
                                                 })
-                                                
-                                            : <div className="text-transparent size-[1.2vw]">#</div>
-                                            }
+                                            ) : (
+                                                <div className="text-transparent size-[1.2vw]">
+                                                    #
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 );
