@@ -1,192 +1,288 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { initWebAudioFont, instrumentOptions } from "../../utils/utils";
+import {
+    drumMappings,
+    initWebAudioFont,
+    instrumentOptions,
+} from "../../utils/utils";
 
 type NoteRefData = {
     audioCtx: AudioContext | null;
     player: any | null;
-    sourceNode: any | null;
     gainNode: GainNode | null;
+    noteObj: any | null;
     startTime: number;
     timeoutId: ReturnType<typeof setTimeout> | null;
-    noteObj: any | null; // Added noteObj property
 };
 
+// The 8 melodic notes
+const melodyData = [
+    { label: "C4", midi: 60 },
+    { label: "D4", midi: 62 },
+    { label: "E4", midi: 64 },
+    { label: "F4", midi: 65 },
+    { label: "G4", midi: 67 },
+    { label: "A4", midi: 69 },
+    { label: "B4", midi: 71 },
+    { label: "C5", midi: 72 },
+];
+
 export default function Instruments() {
+    // Are we loaded yet?
     const [loaded, setLoaded] = useState(false);
+
+    // The chosen instrument – "Drums" or a melodic instrument
     const [selectedInstrument, setSelectedInstrument] = useState(
         instrumentOptions[0]
     );
+    const isDrums = selectedInstrument.label === "Drums";
 
-    // Each of our 8 notes uses its own context/player
+    // Refs for 8 melodic notes
     const c4Ref = useRef<NoteRefData>({
         audioCtx: null,
         player: null,
-        sourceNode: null,
         gainNode: null,
+        noteObj: null,
         startTime: 0,
         timeoutId: null,
-        noteObj: null, // Added noteObj property
     });
-    // ... similarly for D4, E4, ...
     const d4Ref = useRef<NoteRefData>({
         audioCtx: null,
         player: null,
-        sourceNode: null,
         gainNode: null,
+        noteObj: null,
         startTime: 0,
         timeoutId: null,
-        noteObj: null, // Added noteObj property
     });
     const e4Ref = useRef<NoteRefData>({
         audioCtx: null,
         player: null,
-        sourceNode: null,
         gainNode: null,
+        noteObj: null,
         startTime: 0,
         timeoutId: null,
-        noteObj: null, // Added noteObj property
     });
     const f4Ref = useRef<NoteRefData>({
         audioCtx: null,
         player: null,
-        sourceNode: null,
         gainNode: null,
+        noteObj: null,
         startTime: 0,
         timeoutId: null,
-        noteObj: null, // Added noteObj property
     });
     const g4Ref = useRef<NoteRefData>({
         audioCtx: null,
         player: null,
-        sourceNode: null,
         gainNode: null,
+        noteObj: null,
         startTime: 0,
         timeoutId: null,
-        noteObj: null, // Added noteObj property
     });
     const a4Ref = useRef<NoteRefData>({
         audioCtx: null,
         player: null,
-        sourceNode: null,
         gainNode: null,
+        noteObj: null,
         startTime: 0,
         timeoutId: null,
-        noteObj: null, // Added noteObj property
     });
     const b4Ref = useRef<NoteRefData>({
         audioCtx: null,
         player: null,
-        sourceNode: null,
         gainNode: null,
+        noteObj: null,
         startTime: 0,
         timeoutId: null,
-        noteObj: null, // Added noteObj property
     });
     const c5Ref = useRef<NoteRefData>({
         audioCtx: null,
         player: null,
-        sourceNode: null,
         gainNode: null,
+        noteObj: null,
         startTime: 0,
         timeoutId: null,
-        noteObj: null, // Added noteObj property
     });
 
-    const melodyData = [
-        { label: "C4", midi: 60, ref: c4Ref },
-        { label: "D4", midi: 62, ref: d4Ref },
-        { label: "E4", midi: 64, ref: e4Ref },
-        { label: "F4", midi: 65, ref: f4Ref },
-        { label: "G4", midi: 67, ref: g4Ref },
-        { label: "A4", midi: 69, ref: a4Ref },
-        { label: "B4", midi: 71, ref: b4Ref },
-        { label: "C5", midi: 72, ref: c5Ref },
+    const melodyRefs = [
+        { ...melodyData[0], ref: c4Ref },
+        { ...melodyData[1], ref: d4Ref },
+        { ...melodyData[2], ref: e4Ref },
+        { ...melodyData[3], ref: f4Ref },
+        { ...melodyData[4], ref: g4Ref },
+        { ...melodyData[5], ref: a4Ref },
+        { ...melodyData[6], ref: b4Ref },
+        { ...melodyData[7], ref: c5Ref },
     ];
 
-    // 1) Load instrument script data
+    // Refs for drums
+    const bassRef = useRef<NoteRefData>({
+        audioCtx: null,
+        player: null,
+        gainNode: null,
+        noteObj: null,
+        startTime: 0,
+        timeoutId: null,
+    });
+    const snareRef = useRef<NoteRefData>({
+        audioCtx: null,
+        player: null,
+        gainNode: null,
+        noteObj: null,
+        startTime: 0,
+        timeoutId: null,
+    });
+    const hihatRef = useRef<NoteRefData>({
+        audioCtx: null,
+        player: null,
+        gainNode: null,
+        noteObj: null,
+        startTime: 0,
+        timeoutId: null,
+    });
+    const crashRef = useRef<NoteRefData>({
+        audioCtx: null,
+        player: null,
+        gainNode: null,
+        noteObj: null,
+        startTime: 0,
+        timeoutId: null,
+    });
+    const tom1Ref = useRef<NoteRefData>({
+        audioCtx: null,
+        player: null,
+        gainNode: null,
+        noteObj: null,
+        startTime: 0,
+        timeoutId: null,
+    });
+    const tom2Ref = useRef<NoteRefData>({
+        audioCtx: null,
+        player: null,
+        gainNode: null,
+        noteObj: null,
+        startTime: 0,
+        timeoutId: null,
+    });
+    const tom3Ref = useRef<NoteRefData>({
+        audioCtx: null,
+        player: null,
+        gainNode: null,
+        noteObj: null,
+        startTime: 0,
+        timeoutId: null,
+    });
+
+    const drumRefs = [
+        { ...drumMappings[0], ref: bassRef },
+        { ...drumMappings[1], ref: snareRef },
+        { ...drumMappings[2], ref: hihatRef },
+        { ...drumMappings[3], ref: crashRef },
+        { ...drumMappings[4], ref: tom1Ref },
+        { ...drumMappings[5], ref: tom2Ref },
+        { ...drumMappings[6], ref: tom3Ref },
+    ];
+
+    // 1) Load either the melodic instrument or all drum scripts
     useEffect(() => {
         (async () => {
             setLoaded(false);
             try {
-                await initWebAudioFont([selectedInstrument]);
+                if (isDrums) {
+                    await initWebAudioFont(drumMappings);
+                } else {
+                    await initWebAudioFont([selectedInstrument]);
+                }
                 setLoaded(true);
             } catch (err) {
                 console.error("Error loading scripts:", err);
             }
         })();
-    }, [selectedInstrument]);
-
-    // 2) For each note, we create context/player on press, so no global context/player here.
+    }, [isDrums, selectedInstrument]);
 
     /**
-     * Press =>
-     *   - close old note if any
-     *   - create context/player
-     *   - create a GainNode
-     *   - pass that gainNode as 'destination' to queueWaveTable
-     *   - store the underlying AudioBufferSourceNode if we can
+     * Press => if leftover timer from old note => clear it, fade out old note immediately
+     * Then create new context/player/gain and queue indefinite note
      */
-    async function handleNoteDown(refData: NoteRefData, midi: number) {
-        // Cancel leftover timer from old note
+    async function handleNoteDown(
+        refData: NoteRefData,
+        midi: number,
+        globalVar: string
+    ) {
+        // 1) kill leftover timer
         if (refData.timeoutId) {
             clearTimeout(refData.timeoutId);
             refData.timeoutId = null;
         }
-        // If old note is playing, fade or close it
-        if (refData.sourceNode) {
-            fadeOutAndClose(refData, 0.25);
+
+        // 2) fade out old note if it’s still playing
+        if (refData.noteObj) {
+            fadeOutAndClose(refData, 0.25); // quickly stop old note
         }
 
-        // 1) Create new AudioContext
+        // 3) Create new AudioContext
         const AudioContextClass =
             window.AudioContext || (window as any).webkitAudioContext;
         const ctx = new AudioContextClass();
         refData.audioCtx = ctx;
 
-        // 2) New WebAudioFontPlayer
+        // 4) Create new player
         const WAFPlayer = (window as any).WebAudioFontPlayer;
         if (!WAFPlayer) return;
         const player = new WAFPlayer();
         refData.player = player;
 
-        // decode instrument
-        player.loader.decodeAfterLoading(ctx, selectedInstrument.globalVar);
+        // 5) Decode either the drum globalVar or melodic instrument
+        if (isDrums && globalVar) {
+            player.loader.decodeAfterLoading(ctx, globalVar);
+        } else {
+            player.loader.decodeAfterLoading(ctx, selectedInstrument.globalVar);
+        }
 
-        // 3) Create a GainNode, set initial gain=1
+        // 6) custom GainNode
         const gainNode = ctx.createGain();
         gainNode.gain.value = 1;
         gainNode.connect(ctx.destination);
         refData.gainNode = gainNode;
 
-        // 4) queue indefinite note, but pass 'gainNode' as the "destination" param
+        // 7) queue indefinite note
         const now = ctx.currentTime;
-        const instrumentData = (window as any)[selectedInstrument.globalVar];
-        // 'queueWaveTable(audioContext, destination, instrument, now, midi, duration)'
+        let instrumentData: any;
+        if (isDrums && globalVar) {
+            // for drums
+            instrumentData = (window as any)[globalVar];
+        } else {
+            // melodic
+            instrumentData =
+                (window as any)[selectedInstrument.globalVar] || null;
+        }
+        if (!instrumentData) {
+            console.warn(
+                "No instrumentData found for",
+                globalVar || selectedInstrument.globalVar
+            );
+            return;
+        }
+
         const noteObj = player.queueWaveTable(
             ctx,
-            gainNode, // our custom gain node
+            gainNode,
             instrumentData,
             now,
             midi,
-            9999
+            9999 // indefinite
         );
         refData.noteObj = noteObj;
         refData.startTime = now;
-
-        // If we need to track the actual AudioBufferSourceNode for a partial fade:
-        // noteObj might have waveSources[0].source. But let's see if we can do the fade purely on 'gainNode'
-        // We'll do the fade on 'gainNode' itself in fadeOutAndClose.
     }
 
     /**
-     * On release => if hold >=1s => fade, else schedule leftover
+     * Release => if hold >=1s => fade out now, else schedule leftover time
      */
     function handleNoteUp(refData: NoteRefData) {
         if (!refData.audioCtx || !refData.player || !refData.noteObj) return;
 
-        const now = refData.audioCtx.currentTime;
+        const ctx = refData.audioCtx;
+        const now = ctx.currentTime;
         const hold = now - refData.startTime;
 
         if (hold >= 1) {
@@ -204,44 +300,34 @@ export default function Instruments() {
     }
 
     /**
-     * Fade out the gain node over fadeSec, then stop the source, close context
+     * fadeOutAndClose => ramp the gain to 0 over fadeSec, stop the source, close context
      */
     function fadeOutAndClose(refData: NoteRefData, fadeSec: number) {
         const ctx = refData.audioCtx;
         if (!ctx) return;
-
         const now = ctx.currentTime;
 
-        // If we have a custom gain node, we can do a fade
         if (refData.gainNode) {
             const g = refData.gainNode.gain;
             g.cancelScheduledValues(now);
-            // ensure we start from current value
-            const curVal = g.value;
-            g.setValueAtTime(curVal, now);
+            g.setValueAtTime(g.value, now);
             g.linearRampToValueAtTime(0, now + fadeSec);
         }
 
-        // Also schedule stopping the indefinite source at (now + fadeSec).
-        // Typically noteObj might have waveSources, but if not,
-        // we do 'cancelQueue' or something else. We'll try to rely on waveSources fallback:
         if (refData.noteObj?.waveSources) {
             for (const waveSrc of refData.noteObj.waveSources) {
-                const src = waveSrc?.source;
-                if (src) {
-                    src.stop(now + fadeSec);
+                if (waveSrc?.source) {
+                    waveSrc.source.stop(now + fadeSec);
                 }
             }
         } else if (typeof refData.noteObj?.stop === "function") {
             refData.noteObj.stop(now + fadeSec);
         } else if (typeof refData.player?.cancelQueue === "function") {
-            // fallback
             setTimeout(() => {
-                refData.player.cancelQueue(ctx);
+                refData.player?.cancelQueue(ctx);
             }, fadeSec * 1000);
         }
 
-        // After fadeSec, clean up
         setTimeout(() => {
             refData.noteObj = null;
             refData.player = null;
@@ -252,9 +338,14 @@ export default function Instruments() {
         }, fadeSec * 1000);
     }
 
+    const dataRefs = isDrums ? drumRefs : melodyRefs;
+
     return (
         <main style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-            <h1>Fade with Custom GainNode (Min 1s / indefinite hold)</h1>
+            <h1>
+                Drums + Melody in Single Dropdown, 1s min & 0.25s fade, old
+                leftover timer is reset on re-press
+            </h1>
 
             <div style={{ marginBottom: "1rem" }}>
                 <label
@@ -284,13 +375,14 @@ export default function Instruments() {
                 </select>
             </div>
 
-            {!loaded && <p>Loading instrument data…</p>}
+            {!loaded && <p>Loading script data…</p>}
 
             {loaded && (
                 <>
                     <p>
-                        Now we pass a custom GainNode to queueWaveTable, letting
-                        us fade out as we please, even for indefinite notes.
+                        Clicking the same note again clears the old leftover
+                        timer and starts a new note from scratch, so the old 1s
+                        timer can't kill the new note.
                     </p>
                     <div
                         style={{
@@ -299,15 +391,23 @@ export default function Instruments() {
                             gap: "0.5rem",
                         }}
                     >
-                        {melodyData.map((item) => (
+                        {dataRefs.map((item) => (
                             <button
                                 key={item.midi}
                                 onMouseDown={() =>
-                                    handleNoteDown(item.ref.current, item.midi)
+                                    handleNoteDown(
+                                        item.ref.current,
+                                        item.midi,
+                                        isDrums ? item.globalVar || "" : ""
+                                    )
                                 }
                                 onMouseUp={() => handleNoteUp(item.ref.current)}
                                 onTouchStart={() =>
-                                    handleNoteDown(item.ref.current, item.midi)
+                                    handleNoteDown(
+                                        item.ref.current,
+                                        item.midi,
+                                        isDrums ? item.globalVar || "" : ""
+                                    )
                                 }
                                 onTouchEnd={() =>
                                     handleNoteUp(item.ref.current)

@@ -1,7 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
 import Instruments from "./components/Instruments";
-import Webcam from "./components/Webcam";
 import { WebsocketFrame } from "./types/WebsocketTypes";
 
 type ImgData = {
@@ -49,11 +48,6 @@ export default function Home() {
             <div className="p-4 font-bold">GhostJam</div>
             <div className="flex flex-row">
                 <Instruments />
-                <Webcam
-                    imgData={imgData}
-                    ws={ws.current}
-                    sendImage={sendImage}
-                />
             </div>
         </div>
     );

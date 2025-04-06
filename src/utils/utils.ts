@@ -2,56 +2,230 @@
 
 export type InstrumentMeta = {
     label: string;
-    midi: number;
     scriptUrl: string;
     globalVar: string;
+    group?: string;
 };
 
 export const instrumentOptions: InstrumentMeta[] = [
     {
-        label: "Flute",
-        midi: 73,
-        scriptUrl:
-            "https://surikov.github.io/webaudiofontdata/sound/0730_JCLive_sf2_file.js",
-        globalVar: "_tone_0730_JCLive_sf2_file",
-    },
-    {
-        label: "Piano",
-        midi: 0,
-        scriptUrl:
-            "https://surikov.github.io/webaudiofontdata/sound/0000_JCLive_sf2_file.js",
-        globalVar: "_tone_0000_JCLive_sf2_file",
-    },
-    {
         label: "Acoustic Guitar",
-        midi: 24,
         scriptUrl:
             "https://surikov.github.io/webaudiofontdata/sound/0240_JCLive_sf2_file.js",
         globalVar: "_tone_0240_JCLive_sf2_file",
+        group: "guitar",
+    },
+    {
+        label: "Electric Guitar (Jazz)",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0260_JCLive_sf2_file.js",
+        globalVar: "_tone_0260_JCLive_sf2_file",
+        group: "guitar",
+    },
+    {
+        label: "Electric Guitar (Distorted)",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0300_JCLive_sf2_file.js",
+        globalVar: "_tone_0300_JCLive_sf2_file",
+        group: "guitar",
+    },
+    {
+        label: "Electric Guitar (Overdriven)",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0290_JCLive_sf2_file.js",
+        globalVar: "_tone_0290_JCLive_sf2_file",
+        group: "guitar",
     },
     {
         label: "Violin",
-        midi: 40,
         scriptUrl:
             "https://surikov.github.io/webaudiofontdata/sound/0400_JCLive_sf2_file.js",
         globalVar: "_tone_0400_JCLive_sf2_file",
+        group: "strings",
+    },
+    {
+        label: "Cello",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0420_JCLive_sf2_file.js",
+        globalVar: "_tone_0420_JCLive_sf2_file",
+        group: "strings",
+    },
+    {
+        label: "Viola",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0410_JCLive_sf2_file.js",
+        globalVar: "_tone_0410_JCLive_sf2_file",
+        group: "strings",
+    },
+    {
+        label: "Contrabass",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0430_JCLive_sf2_file.js",
+        globalVar: "_tone_0430_JCLive_sf2_file",
+        group: "strings",
+    },
+    {
+        label: "Orchestral Harp",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0460_JCLive_sf2_file.js",
+        globalVar: "_tone_0460_JCLive_sf2_file",
+        group: "strings",
     },
     {
         label: "Trumpet",
-        midi: 56,
         scriptUrl:
             "https://surikov.github.io/webaudiofontdata/sound/0560_JCLive_sf2_file.js",
         globalVar: "_tone_0560_JCLive_sf2_file",
+        group: "brass",
+    },
+    {
+        label: "Trombone",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0570_JCLive_sf2_file.js",
+        globalVar: "_tone_0570_JCLive_sf2_file",
+        group: "brass",
+    },
+    {
+        label: "Tuba",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0580_JCLive_sf2_file.js",
+        globalVar: "_tone_0580_JCLive_sf2_file",
+        group: "brass",
+    },
+    {
+        label: "French Horn",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0600_JCLive_sf2_file.js",
+        globalVar: "_tone_0600_JCLive_sf2_file",
+        group: "brass",
+    },
+    {
+        label: "Flute",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0730_JCLive_sf2_file.js",
+        globalVar: "_tone_0730_JCLive_sf2_file",
+        group: "pipe",
+    },
+    {
+        label: "Piccolo",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0720_JCLive_sf2_file.js",
+        globalVar: "_tone_0720_JCLive_sf2_file",
+        group: "pipe",
+    },
+    {
+        label: "Recorder",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0740_JCLive_sf2_file.js",
+        globalVar: "_tone_0740_JCLive_sf2_file",
+        group: "pipe",
+    },
+    {
+        label: "Pan Flute",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0750_JCLive_sf2_file.js",
+        globalVar: "_tone_0750_JCLive_sf2_file",
+        group: "pipe",
+    },
+    {
+        label: "Whistle",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0780_JCLive_sf2_file.js",
+        globalVar: "_tone_0780_JCLive_sf2_file",
+        group: "pipe",
+    },
+    {
+        label: "Ocarina",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0790_JCLive_sf2_file.js",
+        globalVar: "_tone_0790_JCLive_sf2_file",
+        group: "pipe",
+    },
+    {
+        label: "Piano",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0000_JCLive_sf2_file.js",
+        globalVar: "_tone_0000_JCLive_sf2_file",
+        group: "keyboard",
+    },
+    {
+        label: "Synth (Calliope)",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0820_JCLive_sf2_file.js",
+        globalVar: "_tone_0820_JCLive_sf2_file",
+        group: "keyboard",
+    },
+    {
+        label: "Synth (New Age)",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0880_JCLive_sf2_file.js",
+        globalVar: "_tone_0880_JCLive_sf2_file",
+        group: "keyboard",
+    },
+    {
+        label: "Synth (Warm)",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0890_JCLive_sf2_file.js",
+        globalVar: "_tone_0890_JCLive_sf2_file",
+        group: "keyboard",
+    },
+    {
+        label: "Synth (Sweep)",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0950_JCLive_sf2_file.js",
+        globalVar: "_tone_0950_JCLive_sf2_file",
+        group: "keyboard",
     },
     {
         label: "Drums",
-        midi: -1,
         scriptUrl: "",
         globalVar: "",
+        group: "percussion",
+    },
+    {
+        label: "Tinkle Bell",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/0950_JCLive_sf2_file.js",
+        globalVar: "_tone_0950_JCLive_sf2_file",
+        group: "percussion",
+    },
+    {
+        label: "Woodblock",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/1150_JCLive_sf2_file.js",
+        globalVar: "_tone_1150_JCLive_sf2_file",
+        group: "percussion",
+    },
+    {
+        label: "Taiko Drum",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/1160_JCLive_sf2_file.js",
+        globalVar: "_tone_1160_JCLive_sf2_file",
+        group: "percussion",
+    },
+    {
+        label: "Melodic Tom",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/1170_JCLive_sf2_file.js",
+        globalVar: "_tone_1170_JCLive_sf2_file",
+        group: "percussion",
+    },
+    {
+        label: "Synth Drum",
+        scriptUrl:
+            "https://surikov.github.io/webaudiofontdata/sound/1180_JCLive_sf2_file.js",
+        globalVar: "_tone_1180_JCLive_sf2_file",
+        group: "percussion",
     },
 ];
 
-export const drumMappings: InstrumentMeta[] = [
+interface DrumMappings {
+    label: string;
+    midi: number;
+    scriptUrl: string;
+    globalVar: string;
+}
+export const drumMappings: DrumMappings[] = [
     {
         label: "Bass",
         midi: 35,
