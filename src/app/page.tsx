@@ -4,6 +4,10 @@ import Instruments from "./components/Instruments";
 import Webcam from "./components/Webcam";
 import { ImgData, WebsocketFrame } from "./types/WebsocketTypes";
 
+import {
+    instrumentOptions,
+} from "../utils/utils";
+
 export default function Home() {
     const ws = useRef<WebSocket | null>(null);
     const [imgData, setImgData] = useState<ImgData>({
@@ -11,6 +15,8 @@ export default function Home() {
         cols: [],
         time: 0,
     });
+
+    const [selectedInstrument, setSelectedInstrument] = useState(0);
 
     const connectWebSocket = () => {
         ws.current = new WebSocket("ws://localhost:8000/ws");
@@ -47,13 +53,15 @@ export default function Home() {
     return (
         <div className="h-[100vh] w-[100vw] bg-white text-black">
             <div className="p-4 font-bold">GhostJam</div>
-            <div className="flex flex-row">
-                <Instruments imgData={imgData} />
+            <div className="flex flex-col">
                 <Webcam
                     ws={ws.current}
                     imgData={imgData}
                     sendImage={sendImage}
+                    setInst={setSelectedInstrument} 
+                    instI={selectedInstrument}
                 />
+                <Instruments setInst={setSelectedInstrument} instI={selectedInstrument ?? 0} imgData={imgData} />
             </div>
         </div>
     );

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import {
     drumMappings,
     initWebAudioFont,
+    InstrumentMeta,
     instrumentOptions,
 } from "../../utils/utils";
 import { ImgData } from "../types/WebsocketTypes";
@@ -30,14 +31,15 @@ const melodyData = [
     { label: "C5", midi: 72 },
 ];
 
-export default function Instruments({ imgData }: { imgData: ImgData }) {
+export default function Instruments({ imgData, setInst, instI }: { imgData: ImgData, setInst: any, instI: number }) {
     const [loaded, setLoaded] = useState(false);
-
-    // The chosen instrument from the dropdown: "Drums" or a melodic instrument
-    const [selectedInstrument, setSelectedInstrument] = useState(
-        instrumentOptions[0]
-    );
-    const isDrums = selectedInstrument.label === "Drums";
+    const [isDrums, setIsDrums] = useState(false);
+    const instrument = instrumentOptions[instI]
+    
+    useEffect(()=>{
+        if(instrument != undefined)
+            setIsDrums(instrument.label === "Drums")
+    },[instrument])
 
     // --- Refs for melody (with colState=0 initially) ---
     const c4Ref = useRef<NoteRefData>({
@@ -207,14 +209,14 @@ export default function Instruments({ imgData }: { imgData: ImgData }) {
                 if (isDrums) {
                     await initWebAudioFont(drumMappings);
                 } else {
-                    await initWebAudioFont([selectedInstrument]);
+                    await initWebAudioFont([instrument]);
                 }
                 setLoaded(true);
             } catch (err) {
                 console.error("Error loading scripts:", err);
             }
         })();
-    }, [isDrums, selectedInstrument]);
+    }, [isDrums, instrument]);
 
     // Decide which group (drums or melody) to show
     const dataRefs = isDrums ? drumRefs : melodyRefs;
@@ -263,10 +265,10 @@ export default function Instruments({ imgData }: { imgData: ImgData }) {
         refData.player = player;
 
         // decode
-        if (isDrums && globalVar) {
+        if (isDrums && instrument && globalVar) {
             player.loader.decodeAfterLoading(ctx, globalVar);
         } else {
-            player.loader.decodeAfterLoading(ctx, selectedInstrument.globalVar);
+            player.loader.decodeAfterLoading(ctx, instrument.globalVar);
         }
 
         // gain node
@@ -282,12 +284,12 @@ export default function Instruments({ imgData }: { imgData: ImgData }) {
             instrumentData = (window as any)[globalVar];
         } else {
             instrumentData =
-                (window as any)[selectedInstrument.globalVar] || null;
+                (window as any)[instrument.globalVar] || null;
         }
         if (!instrumentData) {
             console.warn(
                 "No instrumentData for",
-                globalVar || selectedInstrument.globalVar
+                globalVar || instrument.globalVar
             );
             return;
         }
@@ -413,10 +415,10 @@ export default function Instruments({ imgData }: { imgData: ImgData }) {
                         );
                         if (chosen) {
                             setLoaded(false);
-                            setSelectedInstrument(chosen);
+                            setInst(chosen);
                         }
                     }}
-                    value={selectedInstrument.label}
+                    value={instrument != undefined ? instrument.label : "Loading instrument.."}
                 >
                     {instrumentOptions.map((inst) => (
                         <option key={inst.label} value={inst.label}>

@@ -160,7 +160,7 @@ def alter_image(file_path, multiplayer):
     pad = 4
     rects = []
 
-    sideLengths = int(w / 20)
+    sideLengths = int(w / 10)
 
     res = []  # stores booleans of whether each note is being collided with
 
@@ -168,8 +168,8 @@ def alter_image(file_path, multiplayer):
         rects.append(Rectangle("note" + str(i), w - (wOff * i), h, w - (wOff * (i + 1)) + pad, h - 40))
 
     rects.append(Rectangle("top", sideLengths, 0, w - sideLengths, sideLengths))  # TOP
-    rects.append(Rectangle("right", w, sideLengths, w - sideLengths, h - sideLengths))  # RIGHT
-    rects.append(Rectangle("left", 0, sideLengths, sideLengths, h - sideLengths))  # LEFT
+    rects.append(Rectangle("right", w, 0, w - sideLengths, h - 80))  # RIGHT
+    rects.append(Rectangle("left", 0, 0, sideLengths, h - 80))  # LEFT
 
     for r in rects:
         renderRect(r, handPts, img_rgb)
