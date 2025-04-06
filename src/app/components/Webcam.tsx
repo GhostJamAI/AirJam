@@ -257,7 +257,8 @@ export default function Webcam({
                                                 : "bg-[#EFF1ED75]"
                                         }`}
                                     >
-                                        <div className="my-auto w-full font-serif">
+                                        <div className={`my-auto w-full font-serif ${instrumentOptions[instI].label ==
+                                            "Drums" ? 'text-2xl' : 'text-4xl'}`}>
                                             {instrumentOptions[instI].label ==
                                             "Drums"
                                                 ? indToDrum[i]

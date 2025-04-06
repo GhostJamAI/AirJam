@@ -51,7 +51,7 @@ export default function Home() {
     return (
         <div className="h-[100vh] w-[100vw] bg-primary text-white">
             <div className="flex flex-row items-start justify-center h-full">
-                <div className="flex flex-row items-center justify-center h-full py-10">
+                <div className="flex flex-row items-center justify-center h-full pl-4 py-10">
                     <Webcam
                         ws={ws.current}
                         imgData={imgData}
@@ -61,7 +61,7 @@ export default function Home() {
                         noteMapRef={noteMapRef}
                     />
                 </div>
-                <div className="flex flex-col justify-between py-10">
+                <div className="flex flex-col justify-between w-full py-10">
                     <Instruments
                         noteMapRef={noteMapRef}
                         setInst={setSelectedInstrument}

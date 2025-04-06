@@ -4,9 +4,11 @@ import { RefObject, useEffect, useRef, useState } from "react";
 import {
     drumMappings,
     initWebAudioFont,
+    InstrumentMeta,
     instrumentOptions,
 } from "../../utils/utils";
 import { ImgData } from "../types/WebsocketTypes";
+import { Trash } from "lucide-react";
 
 const arrayRange = (start: number, stop: number, step = 1) =>
     Array.from(
@@ -430,32 +432,43 @@ export default function Instruments({
         });
     }, [imgData, selectedInstrument]);
 
+    function instHasRepeats(v:InstrumentMeta)
+    {
+        var flag = false
+        noteMapRef.current[v.label].map((e, i) => {
+            if(e.repeatStage > 0) flag = true;
+        })
+
+        return flag
+    }
+
     return (
-        <div className="px-8 mt-12">
+        <div className="px-4 mt-12">
             <div
                 className=" flex flex-row w-full justify-center items-start gap-4
             "
             >
-                <div className="text-3xl font-bold font-serif">AirJam</div>
+                <div className="flex flex-row gap-2 mr-6">
+                    <img src="AirJamLogoMin.png" className="size-12 my-auto"></img>
+                    <div className="text-3xl font-bold font-serif">AirJam</div>
+                </div>
+                
                 <button
                     className={`${
                         multi == "true" ? "bg-secondary" : "bg-teritary"
-                    } p-2 rounded-xl transition-colors w-36 cursor-pointer duration-1000`}
+                    } p-2 rounded-xl transition-colors font-serif shadow w-36 cursor-pointer duration-1000`}
                     onClick={() => {
                         setMulti(multi === "true" ? "false" : "true");
                     }}
                 >
-                    {`Multiplayer: ${multi === "true" ? "ON" : "OFF"}`}
+                    {`${multi === "true" ? "Multiplayer" : "Singleplayer"}`}
                 </button>
             </div>
             <div className="border border-gray-600 my-2" />
-            <div className="font-serif text-center">
-                One hand to play a note, two to repeat it.
-            </div>
+            <div className="font-serif text-center">One hand to play a note, two to repeat it.</div>
+            <div className="font-serif text-center">Raising your index finger also repeats notes in Singleplayer.</div>
             <div className="border border-gray-600 my-2" />
-            <div className="text-[32px] font-serif font-bold text-center">
-                {selectedInstrument.label}
-            </div>
+            <div className="text-[24px] font-serif font-bold text-center">{selectedInstrument.label}</div>
             <div className="text-xl font-serif font-extralight text-center">
                 {`~ ${selectedInstrument.group
                     .charAt(0)
@@ -468,50 +481,68 @@ export default function Instruments({
                     <div className="border border-gray-600 my-2" />
                 </>
             )}
-            {instrumentOptions.map((v) => {
-                if (noteMapRef.current[v.label])
-                    return (
-                        <div className="flex flex-col" key={v.label}>
-                            {noteMapRef.current[v.label].map((e, i) => {
-                                return (
-                                    e.repeatStage != 0 && (
-                                        <div
-                                            className="font-bold font-serif"
-                                            key={i}
-                                        >
-                                            {v.label}
-                                            <div className="font-normal flex flex-row pl-4">
-                                                {`${
-                                                    v.label == "Drums"
-                                                        ? indToDrum[i]
-                                                        : indToNote[i]
-                                                }:`}
-                                                <div className="grid grid-cols-6 gap-1 pl-2 my-auto">
-                                                    {arrayRange(1, 5, 1).map(
-                                                        (v) => {
-                                                            if (
-                                                                v <=
-                                                                e.repeatStage
-                                                            )
-                                                                return (
-                                                                    <div
-                                                                        key={v}
-                                                                        className="rounded-full shadow size-[1.2vw] text-transparent bg-secondary"
-                                                                    >
-                                                                        #
-                                                                    </div>
-                                                                );
+            <div className="flex flex-col h-[22vw] overflow-auto">
+                {instrumentOptions.map((v) => {
+                    if (noteMapRef.current[v.label])
+                        return (
+                            <div className="flex flex-col" key={v.label}>
+                                {
+                                instHasRepeats(v) && 
+                                <div className="flex font-bold font-serif flex-row gap-2">
+                                    <button className="bg-secondary cursor-pointer hover:bg-teritary rounded size-5 my-auto p-[2px]"
+                                    onClick={()=>{
+                                        const noteRefs = getRefsForInstrument(v.label);
+                                        noteRefs.forEach((refData) => {
+                                            // Clear any active interval
+                                            if (refData.repeatTimer) {
+                                                clearInterval(refData.repeatTimer);
+                                                refData.repeatTimer = undefined;
+                                            }
+                                            // If there's a note playing, force a quick fade-out and close it.
+                                            if (refData.noteObj) {
+                                                fadeOutAndClose(refData, 0.1);
+                                            }
+                                            // Reset the state properties completely.
+                                            refData.repeatStage = 0;
+                                            refData.colState = 0;
+                                        });
+                                    }}>
+                                        <Trash className="size-full"/>
+                                    </button>
+                                    {`${v.label}`}
+                                    <div className="font-normal">
+                                        {`~ ${v.group.charAt(0).toUpperCase()}${v.group.slice(1)}`}
+                                    </div>
+                                </div>}
+                                {noteMapRef.current[v.label].map((e, i) => {
+                                    return (
+                                        e.repeatStage != 0 && (
+                                            <div className="font-bold font-serif">
+                                                <div className="font-normal flex flex-row pl-4">
+                                                    {`${
+                                                        v.label == "Drums"
+                                                            ? indToDrum[i]
+                                                            : indToNote[i]
+                                                    }:`}
+                                                    <div className="grid grid-cols-6 gap-1 pl-2 my-auto">
+                                                        {
+                                                            arrayRange(1,5,1).map((v)=>{
+                                                                if(v <= e.repeatStage)
+                                                                return(<div className="rounded-full shadow size-[1.2vw] text-transparent bg-secondary">
+                                                                    #
+                                                                </div>)
+                                                            })
                                                         }
-                                                    )}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    )
-                                );
-                            })}
-                        </div>
-                    );
-            })}
+                                        )
+                                    );
+                                })}
+                            </div>
+                        );
+                })}
+            </div>
         </div>
     );
 }
