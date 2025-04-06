@@ -31,6 +31,27 @@ type NoteRefData = {
 const BPM = 60;
 const secPerBeat = 60 / BPM;
 
+const indToNote = [
+    "C4",
+    "D4",
+    "E4",
+    "F4",
+    "G4",
+    "A4",
+    "B4",
+    "C5"
+]
+
+const indToDrum = [
+    "Bass",
+    "Snare",
+    "Hi-Hat",
+    "Crash",
+    "Tom 1",
+    "Tom 2",
+    "Tom 3"
+]
+
 // 8 melodic note definitions
 const melodyData = [
     { label: "C4", midi: 60 },
@@ -379,6 +400,21 @@ export default function Instruments({ imgData, setInst, instI }: { imgData: ImgD
     const rightActiveRef = useRef(false);
 
     return (
-        <div/>
+        <div className="px-2 flex flex-col">
+            {instrumentOptions.map((v)=>{
+                if(noteMapRef.current[v.label])
+                    return(<div className="flex flex-col">
+                        {noteMapRef.current[v.label].map((e, i)=>{
+                            return((e.repeatStage != 0) &&
+                            <div className="font-bold">
+                                {v.label}
+                                <div className="font-normal pl-4">
+                                    {`${v.label == "Drums" ? indToDrum[i] : indToNote[i]}: ${e.repeatStage} / 5`}
+                                </div>
+                            </div>)
+                        })}
+                    </div>)
+            })}
+        </div>
     );
 }

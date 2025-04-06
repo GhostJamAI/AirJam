@@ -63,7 +63,7 @@ async def websocket_endpoint(websocket: WebSocket):
             # Parse JSON
             payload = json.loads(data)
 
-            multiplayer = True
+            multiplayer = False
             base64_data = payload["data"]
 
             # Get proper payload from base64 data

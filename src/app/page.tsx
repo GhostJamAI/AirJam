@@ -53,7 +53,7 @@ export default function Home() {
     return (
         <div className="h-[100vh] w-[100vw] bg-[#222c4a] text-white">
             <div className="p-4 font-bold text-center">GhostJam</div>
-            <div className="flex flex-col">
+            <div className="flex flex-row px-4">
                 <Webcam
                     ws={ws.current}
                     imgData={imgData}
