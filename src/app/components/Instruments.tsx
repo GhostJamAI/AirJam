@@ -5,7 +5,9 @@ import {
     initWebAudioFont,
     instrumentOptions,
 } from "../../utils/utils";
+import { ImgData } from "../types/WebsocketTypes";
 
+// For each note/drum, we store enough state to handle indefinite notes.
 type NoteRefData = {
     audioCtx: AudioContext | null;
     player: any | null;
@@ -13,9 +15,10 @@ type NoteRefData = {
     noteObj: any | null;
     startTime: number;
     timeoutId: ReturnType<typeof setTimeout> | null;
+    colState: 0 | 1; // <-- Track whether this note is currently "pressed" (1) or "released" (0)
 };
 
-// The 8 melodic notes
+// Melodic notes for indices 0..7
 const melodyData = [
     { label: "C4", midi: 60 },
     { label: "D4", midi: 62 },
@@ -27,17 +30,16 @@ const melodyData = [
     { label: "C5", midi: 72 },
 ];
 
-export default function Instruments() {
-    // Are we loaded yet?
+export default function Instruments({ imgData }: { imgData: ImgData }) {
     const [loaded, setLoaded] = useState(false);
 
-    // The chosen instrument – "Drums" or a melodic instrument
+    // The chosen instrument from the dropdown: "Drums" or a melodic instrument
     const [selectedInstrument, setSelectedInstrument] = useState(
         instrumentOptions[0]
     );
     const isDrums = selectedInstrument.label === "Drums";
 
-    // Refs for 8 melodic notes
+    // --- Refs for melody (with colState=0 initially) ---
     const c4Ref = useRef<NoteRefData>({
         audioCtx: null,
         player: null,
@@ -45,6 +47,7 @@ export default function Instruments() {
         noteObj: null,
         startTime: 0,
         timeoutId: null,
+        colState: 0,
     });
     const d4Ref = useRef<NoteRefData>({
         audioCtx: null,
@@ -53,6 +56,7 @@ export default function Instruments() {
         noteObj: null,
         startTime: 0,
         timeoutId: null,
+        colState: 0,
     });
     const e4Ref = useRef<NoteRefData>({
         audioCtx: null,
@@ -61,6 +65,7 @@ export default function Instruments() {
         noteObj: null,
         startTime: 0,
         timeoutId: null,
+        colState: 0,
     });
     const f4Ref = useRef<NoteRefData>({
         audioCtx: null,
@@ -69,6 +74,7 @@ export default function Instruments() {
         noteObj: null,
         startTime: 0,
         timeoutId: null,
+        colState: 0,
     });
     const g4Ref = useRef<NoteRefData>({
         audioCtx: null,
@@ -77,6 +83,7 @@ export default function Instruments() {
         noteObj: null,
         startTime: 0,
         timeoutId: null,
+        colState: 0,
     });
     const a4Ref = useRef<NoteRefData>({
         audioCtx: null,
@@ -85,6 +92,7 @@ export default function Instruments() {
         noteObj: null,
         startTime: 0,
         timeoutId: null,
+        colState: 0,
     });
     const b4Ref = useRef<NoteRefData>({
         audioCtx: null,
@@ -93,6 +101,7 @@ export default function Instruments() {
         noteObj: null,
         startTime: 0,
         timeoutId: null,
+        colState: 0,
     });
     const c5Ref = useRef<NoteRefData>({
         audioCtx: null,
@@ -101,6 +110,7 @@ export default function Instruments() {
         noteObj: null,
         startTime: 0,
         timeoutId: null,
+        colState: 0,
     });
 
     const melodyRefs = [
@@ -114,7 +124,7 @@ export default function Instruments() {
         { ...melodyData[7], ref: c5Ref },
     ];
 
-    // Refs for drums
+    // --- Refs for drums (indices 0..6) ---
     const bassRef = useRef<NoteRefData>({
         audioCtx: null,
         player: null,
@@ -122,6 +132,7 @@ export default function Instruments() {
         noteObj: null,
         startTime: 0,
         timeoutId: null,
+        colState: 0,
     });
     const snareRef = useRef<NoteRefData>({
         audioCtx: null,
@@ -130,6 +141,7 @@ export default function Instruments() {
         noteObj: null,
         startTime: 0,
         timeoutId: null,
+        colState: 0,
     });
     const hihatRef = useRef<NoteRefData>({
         audioCtx: null,
@@ -138,6 +150,7 @@ export default function Instruments() {
         noteObj: null,
         startTime: 0,
         timeoutId: null,
+        colState: 0,
     });
     const crashRef = useRef<NoteRefData>({
         audioCtx: null,
@@ -146,6 +159,7 @@ export default function Instruments() {
         noteObj: null,
         startTime: 0,
         timeoutId: null,
+        colState: 0,
     });
     const tom1Ref = useRef<NoteRefData>({
         audioCtx: null,
@@ -154,6 +168,7 @@ export default function Instruments() {
         noteObj: null,
         startTime: 0,
         timeoutId: null,
+        colState: 0,
     });
     const tom2Ref = useRef<NoteRefData>({
         audioCtx: null,
@@ -162,6 +177,7 @@ export default function Instruments() {
         noteObj: null,
         startTime: 0,
         timeoutId: null,
+        colState: 0,
     });
     const tom3Ref = useRef<NoteRefData>({
         audioCtx: null,
@@ -170,6 +186,7 @@ export default function Instruments() {
         noteObj: null,
         startTime: 0,
         timeoutId: null,
+        colState: 0,
     });
 
     const drumRefs = [
@@ -182,7 +199,7 @@ export default function Instruments() {
         { ...drumMappings[6], ref: tom3Ref },
     ];
 
-    // 1) Load either the melodic instrument or all drum scripts
+    // On mount or instrument changes, load scripts
     useEffect(() => {
         (async () => {
             setLoaded(false);
@@ -199,85 +216,94 @@ export default function Instruments() {
         })();
     }, [isDrums, selectedInstrument]);
 
-    /**
-     * Press => if leftover timer from old note => clear it, fade out old note immediately
-     * Then create new context/player/gain and queue indefinite note
-     */
+    // Decide which group (drums or melody) to show
+    const dataRefs = isDrums ? drumRefs : melodyRefs;
+
+    // index => the ref
+    function indexToRef(i: number) {
+        if (isDrums) {
+            if (i >= 0 && i < drumRefs.length) {
+                return drumRefs[i].ref;
+            }
+            return null;
+        } else {
+            if (i >= 0 && i < melodyRefs.length) {
+                return melodyRefs[i].ref;
+            }
+            return null;
+        }
+    }
+
+    // Press logic
     async function handleNoteDown(
         refData: NoteRefData,
         midi: number,
         globalVar: string
     ) {
-        // 1) kill leftover timer
+        // kill leftover timer
         if (refData.timeoutId) {
             clearTimeout(refData.timeoutId);
             refData.timeoutId = null;
         }
-
-        // 2) fade out old note if it’s still playing
+        // fade old
         if (refData.noteObj) {
-            fadeOutAndClose(refData, 0.25); // quickly stop old note
+            fadeOutAndClose(refData, 0.25);
         }
 
-        // 3) Create new AudioContext
+        // create context
         const AudioContextClass =
             window.AudioContext || (window as any).webkitAudioContext;
         const ctx = new AudioContextClass();
         refData.audioCtx = ctx;
 
-        // 4) Create new player
+        // create player
         const WAFPlayer = (window as any).WebAudioFontPlayer;
         if (!WAFPlayer) return;
         const player = new WAFPlayer();
         refData.player = player;
 
-        // 5) Decode either the drum globalVar or melodic instrument
+        // decode
         if (isDrums && globalVar) {
             player.loader.decodeAfterLoading(ctx, globalVar);
         } else {
             player.loader.decodeAfterLoading(ctx, selectedInstrument.globalVar);
         }
 
-        // 6) custom GainNode
+        // gain node
         const gainNode = ctx.createGain();
         gainNode.gain.value = 1;
         gainNode.connect(ctx.destination);
         refData.gainNode = gainNode;
 
-        // 7) queue indefinite note
+        // indefinite
         const now = ctx.currentTime;
         let instrumentData: any;
         if (isDrums && globalVar) {
-            // for drums
             instrumentData = (window as any)[globalVar];
         } else {
-            // melodic
             instrumentData =
                 (window as any)[selectedInstrument.globalVar] || null;
         }
         if (!instrumentData) {
             console.warn(
-                "No instrumentData found for",
+                "No instrumentData for",
                 globalVar || selectedInstrument.globalVar
             );
             return;
         }
 
-        const noteObj = player.queueWaveTable(
+        refData.noteObj = player.queueWaveTable(
             ctx,
             gainNode,
             instrumentData,
             now,
             midi,
-            9999 // indefinite
+            9999
         );
-        refData.noteObj = noteObj;
         refData.startTime = now;
     }
 
-    /**
-     * Release => if hold >=1s => fade out now, else schedule leftover time
-     */
+    // Release logic
     function handleNoteUp(refData: NoteRefData) {
         if (!refData.audioCtx || !refData.player || !refData.noteObj) return;
 
@@ -299,14 +325,12 @@ export default function Instruments() {
         }
     }
 
-    /**
-     * fadeOutAndClose => ramp the gain to 0 over fadeSec, stop the source, close context
-     */
+    // Fade out & close context
     function fadeOutAndClose(refData: NoteRefData, fadeSec: number) {
         const ctx = refData.audioCtx;
         if (!ctx) return;
-        const now = ctx.currentTime;
 
+        const now = ctx.currentTime;
         if (refData.gainNode) {
             const g = refData.gainNode.gain;
             g.cancelScheduledValues(now);
@@ -338,13 +362,40 @@ export default function Instruments() {
         }, fadeSec * 1000);
     }
 
-    const dataRefs = isDrums ? drumRefs : melodyRefs;
+    // Only call handleNoteDown / handleNoteUp if the col changed from 0->1 or 1->0
+    useEffect(() => {
+        if (!imgData?.cols?.length) return;
+        imgData.cols.forEach((col, i) => {
+            const ref = indexToRef(i);
+            if (!ref) return;
+
+            const refData = ref.current;
+            const oldVal = refData.colState;
+            const newVal = col.col;
+
+            if (oldVal !== newVal) {
+                // state changed
+                refData.colState = newVal; // update stored state
+                if (newVal === 1) {
+                    // Press
+                    const midi = isDrums
+                        ? drumMappings[i].midi
+                        : melodyData[i].midi;
+                    const gv = isDrums ? drumMappings[i].globalVar || "" : "";
+                    handleNoteDown(refData, midi, gv);
+                } else {
+                    // Release
+                    handleNoteUp(refData);
+                }
+            }
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [imgData]);
 
     return (
         <main style={{ padding: "2rem", fontFamily: "sans-serif" }}>
             <h1>
-                Drums + Melody in Single Dropdown, 1s min & 0.25s fade, old
-                leftover timer is reset on re-press
+                Prevent Spam: We track colState to avoid repeated Press calls
             </h1>
 
             <div style={{ marginBottom: "1rem" }}>
@@ -380,9 +431,9 @@ export default function Instruments() {
             {loaded && (
                 <>
                     <p>
-                        Clicking the same note again clears the old leftover
-                        timer and starts a new note from scratch, so the old 1s
-                        timer can't kill the new note.
+                        Each note indefinite with a min 1s hold. By tracking{" "}
+                        <code>colState</code> in each ref, we ignore repeated
+                        frames of <code>col=1</code>.
                     </p>
                     <div
                         style={{
@@ -391,27 +442,40 @@ export default function Instruments() {
                             gap: "0.5rem",
                         }}
                     >
-                        {dataRefs.map((item) => (
+                        {/* Buttons for manual testing */}
+                        {(isDrums ? drumRefs : melodyRefs).map((item) => (
                             <button
                                 key={item.midi}
-                                onMouseDown={() =>
+                                onMouseDown={() => {
+                                    const gv = isDrums
+                                        ? item.globalVar || ""
+                                        : "";
                                     handleNoteDown(
                                         item.ref.current,
                                         item.midi,
-                                        isDrums ? item.globalVar || "" : ""
-                                    )
-                                }
-                                onMouseUp={() => handleNoteUp(item.ref.current)}
-                                onTouchStart={() =>
+                                        gv
+                                    );
+                                    item.ref.current.colState = 1; // Manually set colState
+                                }}
+                                onMouseUp={() => {
+                                    handleNoteUp(item.ref.current);
+                                    item.ref.current.colState = 0; // reset colState
+                                }}
+                                onTouchStart={() => {
+                                    const gv = isDrums
+                                        ? item.globalVar || ""
+                                        : "";
                                     handleNoteDown(
                                         item.ref.current,
                                         item.midi,
-                                        isDrums ? item.globalVar || "" : ""
-                                    )
-                                }
-                                onTouchEnd={() =>
-                                    handleNoteUp(item.ref.current)
-                                }
+                                        gv
+                                    );
+                                    item.ref.current.colState = 1;
+                                }}
+                                onTouchEnd={() => {
+                                    handleNoteUp(item.ref.current);
+                                    item.ref.current.colState = 0;
+                                }}
                                 style={{
                                     padding: "1rem",
                                     minWidth: "3rem",

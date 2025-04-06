@@ -6,7 +6,11 @@ import { ImgData, WebsocketFrame } from "./types/WebsocketTypes";
 
 export default function Home() {
     const ws = useRef<WebSocket | null>(null);
-    const [imgData, setImgData] = useState<ImgData>({ data: "", cols:[], time: 0 });
+    const [imgData, setImgData] = useState<ImgData>({
+        data: "",
+        cols: [],
+        time: 0,
+    });
 
     const connectWebSocket = () => {
         ws.current = new WebSocket("ws://localhost:8000/ws");
@@ -44,10 +48,10 @@ export default function Home() {
         <div className="h-[100vh] w-[100vw] bg-white text-black">
             <div className="p-4 font-bold">GhostJam</div>
             <div className="flex flex-row">
-                <Instruments />
+                <Instruments imgData={imgData} />
                 <Webcam
-                    imgData={imgData}
                     ws={ws.current}
+                    imgData={imgData}
                     sendImage={sendImage}
                 />
             </div>
