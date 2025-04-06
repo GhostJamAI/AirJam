@@ -63,11 +63,15 @@ export default function Instruments({
     setInst,
     instI,
     noteMapRef,
+    setMulti,
+    multi,
 }: {
     imgData: ImgData;
     setInst: any;
     instI: number;
     noteMapRef: RefObject<NoteMap>;
+    setMulti: any;
+    multi: string;
 }) {
     // 1) Which instrument index is selected, e.g. 0=Flute, 1=Drums, etc.
     const selectedInstrument = instrumentOptions[instI];
@@ -344,16 +348,28 @@ export default function Instruments({
             }
         }, fadeSec * 1000);
     }
-
     useEffect(() => {
         const resetCol = imgData.cols.find((col) => col.name === "top");
         if (!resetCol) return;
         if (resetCol.col > 0) {
-            const noteRefs = getRefsForInstrument(selectedInstrument.label);
-            noteRefs.forEach((refData) => {
-                stopRepeating(refData);
-                refData.repeatStage = 0;
-            });
+            // Use a slight delay to let any ongoing state updates complete.
+            setTimeout(() => {
+                const noteRefs = getRefsForInstrument(selectedInstrument.label);
+                noteRefs.forEach((refData) => {
+                    // Clear any active interval
+                    if (refData.repeatTimer) {
+                        clearInterval(refData.repeatTimer);
+                        refData.repeatTimer = undefined;
+                    }
+                    // If there's a note playing, force a quick fade-out and close it.
+                    if (refData.noteObj) {
+                        fadeOutAndClose(refData, 0.1);
+                    }
+                    // Reset the state properties completely.
+                    refData.repeatStage = 0;
+                    refData.colState = 0;
+                });
+            }, 0);
         }
     }, [imgData.cols, selectedInstrument.label]);
 
@@ -409,12 +425,44 @@ export default function Instruments({
     }, [imgData, selectedInstrument]);
 
     return (
-        <div className="px-8 flex flex-col">
-            <div className="text-3xl font-bold">GhostJam</div>
-            <div className="pl-2 text-xl font-semibold">{`Group: ${selectedInstrument.group
-                .charAt(0)
-                .toUpperCase()}${selectedInstrument.group.slice(1)}`}</div>
-            <div className="pl-2 text-xl font-semibold">{`Instrument: ${selectedInstrument.label}`}</div>
+        <div className="px-8 mt-12">
+            <div
+                className=" flex justify-center items-start gap-4
+            "
+            >
+                <div className="text-3xl font-bold">GhostJam</div>
+                <button
+                    className="bg-slate-900 p-2
+                 rounded-xl"
+                    onClick={() => {
+                        setMulti(multi === "true" ? "false" : "true");
+                    }}
+                >
+                    {`Toggle Multiplayer: ${multi === "true" ? "ON" : "OFF"}`}
+                </button>
+            </div>
+            <div className="border border-gray-600 my-2" />
+            <div className="text-2xl font-bold">Instrument Info</div>
+            <div className="text-xl">
+                <span className="font-bold">Group:</span>{" "}
+                {`${selectedInstrument.group
+                    .charAt(0)
+                    .toUpperCase()}${selectedInstrument.group.slice(1)}`}
+            </div>
+            <div className="text-xl">
+                <span className="font-bold">Instrument:</span>{" "}
+                {selectedInstrument.label}
+            </div>
+            {instrumentOptions.some((v) =>
+                noteMapRef.current[v.label]?.some((e) => e.repeatStage != 0)
+            ) && (
+                <>
+                    <div className="text-xl font-bold mt-4">
+                        Active Repeats:
+                    </div>
+                    <div className="border border-gray-600 my-2" />
+                </>
+            )}
             {instrumentOptions.map((v) => {
                 if (noteMapRef.current[v.label])
                     return (

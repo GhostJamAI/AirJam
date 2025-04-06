@@ -48,31 +48,29 @@ export default function Home() {
 
         ws.current!.send(payload);
     };
-
     return (
         <div className="h-[100vh] w-[100vw] bg-[#222c4a] text-white">
-            <div className="p-4 font-bold text-center">GhostJam</div>
-            <div className="flex flex-row px-4">
-                <Webcam
-                    ws={ws.current}
-                    imgData={imgData}
-                    sendImage={sendImage}
-                    setInst={setSelectedInstrument}
-                    instI={selectedInstrument}
-                />
-                <Instruments
-                    noteMapRef={noteMapRef}
-                    setInst={setSelectedInstrument}
-                    instI={selectedInstrument ?? 0}
-                    imgData={imgData}
-                />
+            <div className="flex flex-row items-start justify-center h-full">
+                <div className="flex flex-row items-center justify-center h-full py-10">
+                    <Webcam
+                        ws={ws.current}
+                        imgData={imgData}
+                        sendImage={sendImage}
+                        setInst={setSelectedInstrument}
+                        instI={selectedInstrument}
+                    />
+                </div>
+                <div className="flex flex-col justify-between py-10">
+                    <Instruments
+                        noteMapRef={noteMapRef}
+                        setInst={setSelectedInstrument}
+                        instI={selectedInstrument ?? 0}
+                        imgData={imgData}
+                        setMulti={setMulti}
+                        multi={multi}
+                    />
+                </div>
             </div>
-            <button
-                onClick={() => setMulti(multi == "true" ? "false" : "true")}
-                className="bg-black p-2 rounded-xl m-2"
-            >
-                Toggle Multi
-            </button>
         </div>
     );
 }

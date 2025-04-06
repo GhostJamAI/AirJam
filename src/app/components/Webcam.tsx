@@ -2,16 +2,14 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import { instrumentOptions } from "@/utils/utils";
-import { RefObject, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ImgData } from "../types/WebsocketTypes";
-import { NoteMap } from "./Instruments";
 type WebcamProps = {
     ws: WebSocket | null;
     imgData: ImgData;
     sendImage: (v: string) => void;
     setInst: any;
     instI: number;
-    noteMapRef: RefObject<NoteMap>;
 };
 export default function Webcam({
     ws,
@@ -19,7 +17,6 @@ export default function Webcam({
     sendImage,
     setInst,
     instI,
-    noteMapRef,
 }: WebcamProps) {
     const wcRef = useRef<HTMLVideoElement>(null);
     const cvRef = useRef<HTMLCanvasElement>(null);
@@ -255,14 +252,6 @@ export default function Webcam({
                                             "Drums"
                                                 ? indToDrum[i]
                                                 : indToNote[i]}
-                                        </div>
-                                        <div>
-                                            {noteMapRef?.current
-                                                ? noteMapRef.current[
-                                                      instrumentOptions[instI]
-                                                          .label
-                                                  ].repeatStage
-                                                : ""}
                                         </div>
                                     </div>
                                 );
