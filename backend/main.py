@@ -33,7 +33,11 @@ class Rectangle:
 # mp_draw = mp.solutions.drawing_utils
 
 mp_pose = mp.solutions.pose
-mp_pose_model = mp_pose.Pose(static_image_mode=False, model_complexity=2, enable_segmentation=False, min_detection_confidence=0.5, min_tracking_confidence=0.5)
+mp_pose_model = mp_pose.Pose(static_image_mode=False,
+                    model_complexity=1,
+                    enable_segmentation=False,
+                    min_detection_confidence=.9,
+                    min_tracking_confidence=.9)
 mp_draw = mp.solutions.drawing_utils
 
 pose = YOLO("yolo11n-pose.pt")
@@ -123,8 +127,8 @@ def alter_mediapipe(img_rgb, handPts):
     result = mp_pose_model.process(img_rgb)
 
     HAND_LANDMARKS = [
-        mp_pose.PoseLandmark.LEFT_WRIST,
-        mp_pose.PoseLandmark.RIGHT_WRIST,
+        mp_pose.PoseLandmark.LEFT_INDEX,
+        mp_pose.PoseLandmark.RIGHT_INDEX,
     ]
 
     # Draw pose landmarks
@@ -138,7 +142,8 @@ def alter_mediapipe(img_rgb, handPts):
 
 
 def alter_image(file_path, multiplayer):
-    img_rgb = cv2.imread(file_path)
+    img = cv2.imread(file_path)
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     handPts = []
 
@@ -178,7 +183,7 @@ def renderRect(rect: Rectangle, pts, img):
         if checkCollide(rect, np):
             rect.collided += 1
 
-    cv2.rectangle(img, (rect.x1, rect.y1), (rect.x2, rect.y2), (255 if rect.collided == 1 else 0, 0 if rect.collided != 0 else 255, 255 if rect.collided >= 2 else 0), 2)
+    #cv2.rectangle(img, (rect.x1, rect.y1), (rect.x2, rect.y2), (255 if rect.collided == 1 else 0, 0 if rect.collided != 0 else 255, 255 if rect.collided >= 2 else 0), 2)
 
 
 def checkCollide(rect: Rectangle, p):

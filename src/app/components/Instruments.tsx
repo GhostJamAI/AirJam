@@ -46,10 +46,9 @@ const melodyData = [
 // Drums: 7 of them
 const drumCount = 7;
 
-export default function Instruments({ imgData }: { imgData: ImgData }) {
+export default function Instruments({ imgData, setInst, instI }: { imgData: ImgData, setInst:any, instI:number }) {
     // 1) Which instrument index is selected, e.g. 0=Flute, 1=Drums, etc.
-    const [instIndex, setInstIndex] = useState(0);
-    const selectedInstrument = instrumentOptions[instIndex];
+    const selectedInstrument = instrumentOptions[instI];
     const isDrums = selectedInstrument.label === "Drums";
 
     // 2) Dictionary of instrumentName -> array of references
@@ -92,12 +91,12 @@ export default function Instruments({ imgData }: { imgData: ImgData }) {
             }
             setLoaded(true);
         })();
-    }, [instIndex, selectedInstrument]);
+    }, [instI, selectedInstrument]);
 
     // 4) Next / prev instrument logic
     function nextInstrument(delta: number) {
-        setInstIndex((old) => {
-            let ni = old + delta;
+        setInst(() => {
+            let ni = instI + delta;
             if (ni < 0) ni = instrumentOptions.length - 1;
             if (ni >= instrumentOptions.length) ni = 0;
             return ni;
@@ -379,180 +378,7 @@ export default function Instruments({ imgData }: { imgData: ImgData }) {
     const leftActiveRef = useRef(false);
     const rightActiveRef = useRef(false);
 
-    useEffect(() => {
-        const left = imgData.cols.find((col) => col.name === "left");
-        const right = imgData.cols.find((col) => col.name === "right");
-        if (!left || !right) return;
-
-        if ((left.col === 1 || left.col === 2) && !leftActiveRef.current) {
-            nextInstrument(-1);
-            leftActiveRef.current = true;
-        }
-        if (left.col === 0) {
-            leftActiveRef.current = false;
-        }
-        if ((right.col === 1 || right.col === 2) && !rightActiveRef.current) {
-            nextInstrument(+1);
-            rightActiveRef.current = true;
-        }
-        if (right.col === 0) {
-            rightActiveRef.current = false;
-        }
-    }, [imgData]);
-
     return (
-        <main style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-            <h1>Multi-instrument + col===2 repeating toggles, BPM=60</h1>
-
-            {/* Simple left/right instrument toggles */}
-            <div style={{ marginBottom: "1rem" }}>
-                <button onClick={() => nextInstrument(-1)}>
-                    ← Prev Instrument
-                </button>
-                <button
-                    onClick={() => nextInstrument(+1)}
-                    style={{ marginLeft: "0.5rem" }}
-                >
-                    Next Instrument →
-                </button>
-                <p>Current Instrument: {selectedInstrument.label}</p>
-            </div>
-
-            {!loaded && (
-                <p>Loading script data for {selectedInstrument.label}…</p>
-            )}
-
-            {loaded && (
-                <>
-                    <p>
-                        Indefinite hold for col=1 (min 1 second). col=2 toggles
-                        repeating: 1 → 1/2 → 1/4 → 1/8 → 1/16 → off.
-                        <br />
-                        Old loops remain playing if you switch instruments.
-                        Return to the same instrument to toggle them off.
-                    </p>
-                    {/* Optional manual test UI for the currently selected instrument */}
-                    {isDrums ? (
-                        <div
-                            style={{
-                                display: "flex",
-                                gap: "0.5rem",
-                                flexWrap: "wrap",
-                            }}
-                        >
-                            {drumMappings.map((drum, i) => {
-                                return (
-                                    <button
-                                        key={drum.midi}
-                                        onMouseDown={() => {
-                                            // cycle col=0->1->2->0
-                                            const noteRefs =
-                                                getRefsForInstrument("Drums");
-                                            const refData = noteRefs[i];
-                                            const next =
-                                                (refData.colState + 1) % 3;
-                                            refData.colState = next as
-                                                | 0
-                                                | 1
-                                                | 2;
-                                            if (next === 1) {
-                                                // indefinite hold
-                                                if (refData.repeatStage === 0) {
-                                                    handleNoteDown(
-                                                        refData,
-                                                        drum.midi,
-                                                        drum.globalVar
-                                                    );
-                                                }
-                                            } else if (next === 0) {
-                                                // release
-                                                if (refData.repeatStage === 0) {
-                                                    handleNoteUp(refData);
-                                                }
-                                            } else {
-                                                // col=2 => repeat toggle
-                                                handleRepeatToggle(
-                                                    refData,
-                                                    drum.midi,
-                                                    drum.globalVar
-                                                );
-                                            }
-                                        }}
-                                        style={{
-                                            padding: "1rem",
-                                            minWidth: "3rem",
-                                            border: "2px solid #444",
-                                            backgroundColor: "#f0f0f0",
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        {drum.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        <div
-                            style={{
-                                display: "flex",
-                                gap: "0.5rem",
-                                flexWrap: "wrap",
-                            }}
-                        >
-                            {melodyData.map((m, i) => {
-                                return (
-                                    <button
-                                        key={m.midi}
-                                        onMouseDown={() => {
-                                            // cycle col=0->1->2->0
-                                            const noteRefs =
-                                                getRefsForInstrument(
-                                                    selectedInstrument.label
-                                                );
-                                            const refData = noteRefs[i];
-                                            const next =
-                                                (refData.colState + 1) % 3;
-                                            refData.colState = next as
-                                                | 0
-                                                | 1
-                                                | 2;
-                                            if (next === 1) {
-                                                if (refData.repeatStage === 0) {
-                                                    handleNoteDown(
-                                                        refData,
-                                                        m.midi,
-                                                        selectedInstrument.globalVar
-                                                    );
-                                                }
-                                            } else if (next === 0) {
-                                                if (refData.repeatStage === 0) {
-                                                    handleNoteUp(refData);
-                                                }
-                                            } else {
-                                                // col=2 => repeat
-                                                handleRepeatToggle(
-                                                    refData,
-                                                    m.midi,
-                                                    selectedInstrument.globalVar
-                                                );
-                                            }
-                                        }}
-                                        style={{
-                                            padding: "1rem",
-                                            minWidth: "3rem",
-                                            border: "2px solid #444",
-                                            backgroundColor: "#f0f0f0",
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        {m.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    )}
-                </>
-            )}
-        </main>
+        <div/>
     );
 }

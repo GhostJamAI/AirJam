@@ -19,6 +19,8 @@ export default function Webcam({ ws, imgData, sendImage, setInst, instI }: Webca
     const [lbState, setLbState] = useState(false)
     const [rbState, setRbState] = useState(false)
 
+    const wcWidth = 50
+
     const indToNote = [
         "C4",
         "D4",
@@ -28,6 +30,16 @@ export default function Webcam({ ws, imgData, sendImage, setInst, instI }: Webca
         "A4",
         "B4",
         "C5"
+    ]
+
+    const indToDrum = [
+        "Bass",
+        "Snare",
+        "Hi-Hat",
+        "Crash",
+        "Tom 1",
+        "Tom 2",
+        "Tom 3"
     ]
 
     const w = 320;
@@ -105,43 +117,39 @@ export default function Webcam({ ws, imgData, sendImage, setInst, instI }: Webca
             <video ref={wcRef} autoPlay playsInline className="hidden" />
             <canvas ref={cvRef} className="hidden -scale-x-[100%]" />
             <div className="flex flex-row">
-                <div className="relative w-[50vw] m-2 border">
+                <div className="relative w-[75vw] mx-auto">
                     <img
                         ref={imgRef}
-                        className="-scale-x-[100%] w-full"
+                        className="-scale-x-[100%] w-full border-2 border-black rounded-xl"
                     />
-                    <div className="absolute flex flex-row top-0 w-full text-white h-[16vw]">
-                        <div className={`border-2 border-white h-full w-[5vw] ${!imgData.cols[9] ? "" : imgData.cols[9].col >= 1 ? "bg-[#50adff75]" : "bg-[#e1c7c775]"}`}>
+                    <div className="absolute flex p-1 flex-row top-0 w-full text-white h-[24vw]">
+                        <div className={`h-full w-[7.5vw] rounded-tl-xl ${!imgData.cols[9] ? "" : imgData.cols[9].col >= 1 ? "bg-[#50adff75]" : "bg-[#e1c7c775]"}`}>
                             Left
                         </div>
-                        <div className={`border-2 border-white h-[5vw] w-[40vw] ${!imgData.cols[8] ? "" : imgData.cols[8].col >= 1 ? "bg-[#50adff75]" : "bg-[#e1c7c775]"}`}>
-                            Top
+                        <div className={`flex h-[7.5vw] w-[60vw] ${!imgData.cols[8] ? "" : imgData.cols[8].col >= 1 ? "bg-[#50adff75]" : "bg-[#e1c7c775]"}`}>
+                            <div className="text-center my-auto font-bold text-3xl w-full">
+                                {`${instrumentOptions[instI].label} (${instI+1} / ${instrumentOptions.length})`}
+                            </div>
                         </div>
-                        <div className={`border-2 border-white h-full w-[5vw] ${!imgData.cols[10] ? "" : imgData.cols[10].col >= 1 ? "bg-[#50adff75]" : "bg-[#e1c7c775]"}`}>
+                        <div className={`h-full w-[7.5vw] rounded-tr-xl ${!imgData.cols[10] ? "" : imgData.cols[10].col >= 1 ? "bg-[#50adff75]" : "bg-[#e1c7c775]"}`}>
                             Right
                         </div>
                     </div>
-                    <div className="absolute bottom-0 grid pr-1 gap-[0.5vw] grid-cols-8 h-[6vw] w-full">
+                    <div className={`absolute bottom-0 grid pr-[1.2vw] gap-[1vw] grid-cols-8 h-[9vw] w-full`}>
                         {
                             imgData.cols.map((v, i)=>{
-                                if(i < 8)
+                                if(i < (instrumentOptions[instI].label == "Drums" ? 7 : 8))
                                     return(
-                                    <div className={`text-white flex text-center border-2 
-                                        ${v.col >= 2 ? "bg-[#ff505075]" : v.col == 1 ? "bg-[#50adff75]" : "bg-[#e1c7c775]"}`}>
+                                    <div className={`text-white flex text-center rounded-xl m-1
+                                        ${v.col >= 2 ? "bg-[#50ffbfb3]" : v.col == 1 ? "bg-[#50fff975]" : "bg-[#e1c7c775]"}`}>
                                         <div className="my-auto w-full">
-                                            {indToNote[i]}
+                                            {instrumentOptions[instI].label == "Drums" ? indToDrum[i] : indToNote[i]}
                                         </div>
                                     </div>
                                 )
                             })
                         }
                     </div>
-                </div>
-                <div>
-                    {imgData.cols.map((v)=>{
-                        return<div>{`${v.name}, col: ${v.col}`}</div>
-                    })}
-                    <div>{instI}</div>
                 </div>
             </div>
         </div>
