@@ -433,14 +433,14 @@ export default function Instruments({
     return (
         <div className="px-8 mt-12">
             <div
-                className=" flex justify-center items-start gap-4
+                className=" flex flex-row w-full justify-center items-start gap-4
             "
             >
-                <div className="text-3xl font-bold">AirJam</div>
+                <div className="text-3xl font-bold font-serif">AirJam</div>
                 <button
                     className={`${
                         multi == "true" ? "bg-secondary" : "bg-teritary"
-                    } p-2 rounded-xl transition-colors cursor-pointer duration-1000`}
+                    } p-2 rounded-xl transition-colors w-36 cursor-pointer duration-1000`}
                     onClick={() => {
                         setMulti(multi === "true" ? "false" : "true");
                     }}
@@ -448,6 +448,8 @@ export default function Instruments({
                     {`Multiplayer: ${multi === "true" ? "ON" : "OFF"}`}
                 </button>
             </div>
+            <div className="border border-gray-600 my-2" />
+            <div className="font-serif text-center">One hand to play a note, two to repeat it.</div>
             <div className="border border-gray-600 my-2" />
             <div className="text-[32px] font-serif font-bold text-center">{selectedInstrument.label}</div>
             <div className="text-xl font-serif font-extralight text-center">
@@ -459,9 +461,6 @@ export default function Instruments({
                 noteMapRef.current[v.label]?.some((e) => e.repeatStage != 0)
             ) && (
                 <>
-                    <div className="text-xl font-bold mt-4">
-                        Active Repeats:
-                    </div>
                     <div className="border border-gray-600 my-2" />
                 </>
             )}
