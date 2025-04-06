@@ -1,15 +1,12 @@
 "use client";
 import { useRef, useState } from "react";
 import Instruments from "./components/Instruments";
-import { WebsocketFrame } from "./types/WebsocketTypes";
+import Webcam from "./components/Webcam";
+import { ImgData, WebsocketFrame } from "./types/WebsocketTypes";
 
-type ImgData = {
-    data: string;
-    time: number;
-};
 export default function Home() {
     const ws = useRef<WebSocket | null>(null);
-    const [imgData, setImgData] = useState<ImgData>({ data: "", time: 0 });
+    const [imgData, setImgData] = useState<ImgData>({ data: "", cols:[], time: 0 });
 
     const connectWebSocket = () => {
         ws.current = new WebSocket("ws://localhost:8000/ws");
@@ -21,7 +18,7 @@ export default function Home() {
         ws.current.onmessage = (event) => {
             const res: WebsocketFrame = JSON.parse(event.data);
 
-            setImgData({ data: res.data, time: Date.now() });
+            setImgData({ data: res.data, cols: res.cols, time: Date.now() });
         };
 
         ws.current.onerror = (err) => {

@@ -9,6 +9,21 @@ import cv2
 import asyncio
 from ultralytics.models import YOLO
 
+class Rectangle:
+    name = ""
+    x1 = 0
+    y1 = 0
+    x2 = 0
+    y2 = 0
+    collided = False
+
+    def __init__(self, name, x1, y1, x2, y2):
+        self.name = name
+        self.x1 = x1
+        self.x2 = x2
+        self.y1 = y1
+        self.y2 = y2
+
 pose = YOLO("yolo11n-pose.pt")
 app = FastAPI()
 
@@ -43,8 +58,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 f.write(image_bytes)
             print(f"Saved {random_filename}")
 
-            data_url = await asyncio.to_thread(alter_image, file_path)
-            await websocket.send_text(json.dumps({"data": data_url}))
+            send_data = await asyncio.to_thread(alter_image, file_path)
+            await websocket.send_text(json.dumps({"data": send_data["data"], "cols": send_data["cols"]}))
     except WebSocketDisconnect:
         if os.path.exists(file_path):
             os.remove(file_path)
@@ -53,11 +68,11 @@ async def websocket_endpoint(websocket: WebSocket):
             print(f"[Missing] File was not found: {random_filename}")
 
 def alter_image(file_path):
-    img = cv2.imread(file_path)
-    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img_rgb = cv2.imread(file_path)
+    #img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     #edges = cv2.Canny(img, 100, 200)
 
-    poseRes = pose(img, conf=0.3)
+    poseRes = pose(img_rgb, conf=0.3)
     pts = poseRes[0].keypoints.data
 
     skeleton = [
@@ -75,7 +90,7 @@ def alter_image(file_path):
         #(14, 16),  # Right leg
     ]
 
-    handPts = [0,0]
+    handPts = []
 
     for person in pts:
         kps = person.cpu().numpy()
@@ -105,7 +120,7 @@ def alter_image(file_path):
         # Draw keypoints
         for i in range(9,11):
             kp = kps[i]
-            handPts[i-9] = kp
+            handPts.append(kp)
             if len(kp) == 3:  # Ensure keypoint has (x, y, confidence)
                 x, y, conf = kp
                 if conf > 0.3:  # Confidence threshold
@@ -113,15 +128,48 @@ def alter_image(file_path):
                     # Ensure the coordinates are within the image bounds
                     if 0 <= x < img_rgb.shape[1] and 0 <= y < img_rgb.shape[0]:
                         cv2.circle(img_rgb, (x, y), 3, (255, 0, 0), -1)  # Red points
-    
-    n = 8
-    for i in range(0,n):
-        wOff = int(w/n)
-        pad = 4
-        cv2.rectangle(img_rgb, (w-(wOff*i),h), (w-(wOff*(i+1))+pad,h-40), (0,255,0), 2)
 
-    data = image_array_to_base64(img_rgb)
+    n = 8
+    wOff = int(w/n)
+    pad = 4
+    rects = []
+
+    sideLengths = int(w/20)
+    
+    rects.append(Rectangle("top", sideLengths, 0, w-sideLengths, sideLengths)) # TOP 
+    rects.append(Rectangle("right", w, sideLengths, w-sideLengths, h-sideLengths)) # RIGHT
+    rects.append(Rectangle("left", 0, sideLengths, sideLengths, h-sideLengths)) # LEFT
+
+
+    res = [] #stores booleans of whether each note is being collided with
+
+    
+    for i in range(0,n):
+        rects.append(Rectangle("note"+str(i), w-(wOff*i), h, w-(wOff*(i+1))+pad, h-40))
+      
+    for r in rects:
+        renderRect(r, handPts, img_rgb)
+        res.append({"name": r.name, "col": r.collided})
+    
+    data = {"data": image_array_to_base64(img_rgb), "cols": res}
     return data
+
+def renderRect(rect:Rectangle, pts, img):
+
+    for p in pts:
+        x, y, conf = p
+        np = [x, y]
+        if checkCollide(rect, np):
+            rect.collided = True
+
+    cv2.rectangle(img, (rect.x1, rect.y1), (rect.x2, rect.y2), (255 if rect.collided else 0,0 if rect.collided else 255,0), 2)
+
+def checkCollide(rect:Rectangle, p):
+    copy = rect
+    if (copy.x1 < copy.x2): copy.x1, copy.x2 = copy.x2, copy.x1
+    if (copy.y1 < copy.y2): copy.y1, copy.y2 = copy.y2, copy.y1
+
+    return p[0] < copy.x1 and p[0] > copy.x2 and p[1] < copy.y1 and p[1] > copy.y2
 
 def image_array_to_base64(image_np, format=".png"):
     # Encode image to memory

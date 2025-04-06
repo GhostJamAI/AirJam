@@ -2,9 +2,10 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import { useEffect, useRef } from "react";
+import { ImgData } from "../types/WebsocketTypes";
 type WebcamProps = {
     ws: WebSocket | null;
-    imgData: { data: string; time: number };
+    imgData: ImgData;
     sendImage: (v: string) => void;
 };
 export default function Webcam({ ws, imgData, sendImage }: WebcamProps) {
@@ -62,6 +63,11 @@ export default function Webcam({ ws, imgData, sendImage }: WebcamProps) {
                 ref={imgRef}
                 className="-scale-x-[100%] m-2 border-2 border-amber-500 w-[50vw]"
             />
+            <div>
+                {imgData.cols.map((v)=>{
+                    return<div>{`${v.name}, col: ${v.col}`}</div>
+                })}
+            </div>
         </div>
     );
 }
