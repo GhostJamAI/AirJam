@@ -291,7 +291,7 @@ export const loadScript = (src: string): Promise<void> => {
     });
 };
 
-export const initWebAudioFont = async (instruments: any) => {
+export const initWebAudioFont = async (instruments: InstrumentMeta[]) => {
     await loadScript(
         "https://surikov.github.io/webaudiofont/npm/dist/WebAudioFontPlayer.js"
     );
