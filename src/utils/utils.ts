@@ -299,3 +299,12 @@ export const initWebAudioFont = async (instruments: InstrumentMeta[]) => {
         await loadScript(inst.scriptUrl);
     }
 };
+
+export const initDrumAudioFont = async (instruments: DrumMappings[]) => {
+    await loadScript(
+        "https://surikov.github.io/webaudiofont/npm/dist/WebAudioFontPlayer.js"
+    );
+    for (const inst of instruments) {
+        await loadScript(inst.scriptUrl);
+    }
+};

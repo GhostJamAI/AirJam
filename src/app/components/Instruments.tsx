@@ -3,6 +3,7 @@
 import { RefObject, useEffect, useRef, useState } from "react";
 import {
     drumMappings,
+    initDrumAudioFont,
     initWebAudioFont,
     InstrumentMeta,
     instrumentOptions,
@@ -113,7 +114,7 @@ export default function Instruments({
                 // Not yet loaded => load it
                 try {
                     if (label === "Drums") {
-                        await initWebAudioFont(drumMappings);
+                        await initDrumAudioFont(drumMappings);
                     } else {
                         await initWebAudioFont([selectedInstrument]);
                     }
