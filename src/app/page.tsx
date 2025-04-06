@@ -1,15 +1,12 @@
 "use client";
 import { useRef, useState } from "react";
-import Instruments from "./components/Instruments";
+import Instruments, { NoteMap } from "./components/Instruments";
 import Webcam from "./components/Webcam";
 import { ImgData, WebsocketFrame } from "./types/WebsocketTypes";
 
-import {
-    instrumentOptions,
-} from "../utils/utils";
-
 export default function Home() {
     const ws = useRef<WebSocket | null>(null);
+    const [multi, setMulti] = useState<string>("true");
     const [imgData, setImgData] = useState<ImgData>({
         data: "",
         cols: [],
@@ -17,6 +14,7 @@ export default function Home() {
     });
 
     const [selectedInstrument, setSelectedInstrument] = useState(0);
+    const noteMapRef = useRef<NoteMap>({});
 
     const connectWebSocket = () => {
         ws.current = new WebSocket("ws://localhost:8000/ws");
@@ -45,6 +43,7 @@ export default function Home() {
         // Optional: Send as JSON with filename
         const payload = JSON.stringify({
             data: base64,
+            multiplayer: multi,
         });
 
         ws.current!.send(payload);
@@ -58,11 +57,22 @@ export default function Home() {
                     ws={ws.current}
                     imgData={imgData}
                     sendImage={sendImage}
-                    setInst={setSelectedInstrument} 
+                    setInst={setSelectedInstrument}
                     instI={selectedInstrument}
                 />
-                <Instruments setInst={setSelectedInstrument} instI={selectedInstrument ?? 0} imgData={imgData} />
+                <Instruments
+                    noteMapRef={noteMapRef}
+                    setInst={setSelectedInstrument}
+                    instI={selectedInstrument ?? 0}
+                    imgData={imgData}
+                />
             </div>
+            <button
+                onClick={() => setMulti(multi == "true" ? "false" : "true")}
+                className="bg-black p-2 rounded-xl m-2"
+            >
+                Toggle Multi
+            </button>
         </div>
     );
 }

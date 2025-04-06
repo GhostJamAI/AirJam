@@ -1,36 +1,47 @@
 /* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { instrumentOptions } from "@/utils/utils";
+import { RefObject, useEffect, useRef, useState } from "react";
 import { ImgData } from "../types/WebsocketTypes";
-import { instrumentOptions,  } from "@/utils/utils";
+import { NoteMap } from "./Instruments";
 type WebcamProps = {
     ws: WebSocket | null;
     imgData: ImgData;
     sendImage: (v: string) => void;
     setInst: any;
-    instI: number
+    instI: number;
+    noteMapRef: RefObject<NoteMap>;
 };
-export default function Webcam({ ws, imgData, sendImage, setInst, instI }: WebcamProps) {
+export default function Webcam({
+    ws,
+    imgData,
+    sendImage,
+    setInst,
+    instI,
+    noteMapRef,
+}: WebcamProps) {
     const wcRef = useRef<HTMLVideoElement>(null);
     const cvRef = useRef<HTMLCanvasElement>(null);
     const imgRef = useRef<HTMLImageElement>(null);
 
-    const [lbState, setLbState] = useState(false)
-    const [rbState, setRbState] = useState(false)
+    const [lbState, setLbState] = useState(false);
+    const [tlbState, setTlbState] = useState(false);
+    const [rbState, setRbState] = useState(false);
+    const [trbState, setTrbState] = useState(false);
+    const leftIndex = imgData.cols.findIndex((col) => col.name === "left");
+    const rightIndex = imgData.cols.findIndex((col) => col.name === "right");
+    const resetIndex = imgData.cols.findIndex((col) => col.name === "top");
+    const nextGroupIndex = imgData.cols.findIndex(
+        (col) => col.name === "topright"
+    );
+    const prevGroupIndex = imgData.cols.findIndex(
+        (col) => col.name === "topleft"
+    );
 
-    const wcWidth = 50
+    const wcWidth = 50;
 
-    const indToNote = [
-        "C4",
-        "D4",
-        "E4",
-        "F4",
-        "G4",
-        "A4",
-        "B4",
-        "C5"
-    ]
+    const indToNote = ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"];
 
     const indToDrum = [
         "Bass",
@@ -39,8 +50,8 @@ export default function Webcam({ ws, imgData, sendImage, setInst, instI }: Webca
         "Crash",
         "Tom 1",
         "Tom 2",
-        "Tom 3"
-    ]
+        "Tom 3",
+    ];
 
     const w = 320;
     const h = 180;
@@ -70,33 +81,64 @@ export default function Webcam({ ws, imgData, sendImage, setInst, instI }: Webca
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [imgData.time, ws?.readyState]);
 
-    useEffect(()=>{
-        for(let i = 8; i < imgData.cols.length; i++)
-        {
-            let col = imgData.cols[i].col
-            
-            switch(i)
-            {
-                case 9:
-                    setLbState(col > 0)
-                    break;
-                case 10:
-                    setRbState(col > 0)
-                    break;
-            }
-            
+    useEffect(() => {
+        setLbState(imgData.cols[leftIndex]?.col > 0);
+        setRbState(imgData.cols[rightIndex]?.col > 0);
+        setTlbState(imgData.cols[nextGroupIndex]?.col > 0);
+        setTrbState(imgData.cols[prevGroupIndex]?.col > 0);
+    }, [imgData.cols]);
+
+    useEffect(() => {
+        if (lbState) setInst((instI + 1) % instrumentOptions.length);
+    }, [lbState]);
+
+    useEffect(() => {
+        if (rbState)
+            setInst(
+                (instI - 1 + instrumentOptions.length) %
+                    instrumentOptions.length
+            );
+    }, [rbState]);
+
+    const groupList = [
+        "guitar",
+        "strings",
+        "brass",
+        "pipe",
+        "keyboard",
+        "percussion",
+    ];
+
+    useEffect(() => {
+        if (tlbState) {
+            const currentGroupIndex = groupList.indexOf(
+                instrumentOptions[instI].group
+            );
+            const prevGroup =
+                groupList[
+                    (currentGroupIndex - 1 + groupList.length) %
+                        groupList.length
+                ];
+            const firstInPrevGroupIndex = instrumentOptions.findIndex(
+                (inst) => inst.group === prevGroup
+            );
+            setInst(firstInPrevGroupIndex);
         }
-    },[imgData.cols])
+    }, [tlbState]);
 
-    useEffect(()=>{
-        if(lbState)
-            setInst(instI - 1 < 0 ? instrumentOptions.length-1 : instI-1)
-    },[lbState])
-
-    useEffect(()=>{
-        if(rbState)
-            setInst(instI + 1 >= instrumentOptions.length ? 0 : instI + 1)
-    },[rbState])
+    useEffect(() => {
+        if (trbState) {
+            const currentGroupIndex = groupList.indexOf(
+                instrumentOptions[instI].group
+            );
+            const nextGroup =
+                groupList[(currentGroupIndex + 1) % groupList.length];
+            const firstInNextGroupIndex = instrumentOptions.findIndex(
+                (inst) => inst.group === nextGroup
+            );
+            setInst(firstInNextGroupIndex);
+        }
+    }, [trbState]);
 
     function takePicture() {
         const cv = cvRef?.current;
@@ -123,32 +165,108 @@ export default function Webcam({ ws, imgData, sendImage, setInst, instI }: Webca
                         className="-scale-x-[100%] w-full border-2 border-black rounded-xl"
                     />
                     <div className="absolute flex p-1 flex-row top-0 w-full text-white h-[24vw]">
-                        <div className={`h-full w-[7.5vw] rounded-tl-xl ${!imgData.cols[9] ? "" : imgData.cols[9].col >= 1 ? "bg-[#50adff75]" : "bg-[#e1c7c775]"}`}>
-                            Left
+                        {/* Left box */}
+                        <div
+                            className={`h-full w-[7.5vw] rounded-tl-xl flex flex-col items-center justify-center ${
+                                !imgData.cols[rightIndex]
+                                    ? ""
+                                    : imgData.cols[rightIndex].col >= 1
+                                    ? "bg-[#50adff75]"
+                                    : "bg-[#e1c7c775]"
+                            }`}
+                        >
+                            <div>Previous</div> <div> Instrument</div>
                         </div>
-                        <div className={`flex h-[7.5vw] w-[60vw] ${!imgData.cols[8] ? "" : imgData.cols[8].col >= 1 ? "bg-[#50adff75]" : "bg-[#e1c7c775]"}`}>
-                            <div className="text-center my-auto font-bold text-3xl w-full">
-                                {`${instrumentOptions[instI].label} (${instI+1} / ${instrumentOptions.length})`}
+
+                        {/* Center three buttons */}
+                        <div className="flex h-[9.5vw] w-[60vw] gap-1 px-1">
+                            <div
+                                className={`w-1/3 h-full flex items-center justify-center rounded-md ${
+                                    !imgData.cols[nextGroupIndex]
+                                        ? ""
+                                        : imgData.cols[nextGroupIndex].col >= 1
+                                        ? "bg-[#50adff75]"
+                                        : "bg-[#e1c7c775]"
+                                }`}
+                            >
+                                Previous Group
+                            </div>
+                            <div
+                                className={`w-1/3 h-full flex items-center justify-center rounded-md ${
+                                    !imgData.cols[resetIndex]
+                                        ? ""
+                                        : imgData.cols[resetIndex].col >= 1
+                                        ? "bg-[#50adff75]"
+                                        : "bg-[#e1c7c775]"
+                                }`}
+                            >
+                                Reset Tempo
+                            </div>
+                            <div
+                                className={`w-1/3 h-full flex items-center justify-center rounded-md ${
+                                    !imgData.cols[prevGroupIndex]
+                                        ? ""
+                                        : imgData.cols[prevGroupIndex].col >= 1
+                                        ? "bg-[#50adff75]"
+                                        : "bg-[#e1c7c775]"
+                                }`}
+                            >
+                                Next Group
                             </div>
                         </div>
-                        <div className={`h-full w-[7.5vw] rounded-tr-xl ${!imgData.cols[10] ? "" : imgData.cols[10].col >= 1 ? "bg-[#50adff75]" : "bg-[#e1c7c775]"}`}>
-                            Right
+
+                        {/* Right box */}
+                        <div
+                            className={`h-full w-[7.5vw] rounded-tr-xl flex flex-col items-center justify-center ${
+                                !imgData.cols[leftIndex]
+                                    ? ""
+                                    : imgData.cols[leftIndex].col >= 1
+                                    ? "bg-[#50adff75]"
+                                    : "bg-[#e1c7c775]"
+                            }`}
+                        >
+                            <div>Next</div> <div> Instrument</div>
                         </div>
                     </div>
-                    <div className={`absolute bottom-0 grid pr-[1.2vw] gap-[1vw] grid-cols-8 h-[9vw] w-full`}>
-                        {
-                            imgData.cols.map((v, i)=>{
-                                if(i < (instrumentOptions[instI].label == "Drums" ? 7 : 8))
-                                    return(
-                                    <div className={`text-white flex text-center rounded-xl m-1
-                                        ${v.col >= 2 ? "bg-[#50ffbfb3]" : v.col == 1 ? "bg-[#50fff975]" : "bg-[#e1c7c775]"}`}>
+                    <div
+                        className={`absolute bottom-0 grid pr-[1.2vw] gap-[1vw] grid-cols-8 h-[9vw] w-full`}
+                    >
+                        {imgData.cols.map((v, i) => {
+                            if (
+                                i <
+                                (instrumentOptions[instI].label == "Drums"
+                                    ? 7
+                                    : 8)
+                            )
+                                return (
+                                    <div
+                                        key={i}
+                                        className={`text-white flex flex-col text-center rounded-xl m-1
+                                        ${
+                                            v.col >= 2
+                                                ? "bg-[#50ffbfb3]"
+                                                : v.col == 1
+                                                ? "bg-[#50fff975]"
+                                                : "bg-[#e1c7c775]"
+                                        }`}
+                                    >
                                         <div className="my-auto w-full">
-                                            {instrumentOptions[instI].label == "Drums" ? indToDrum[i] : indToNote[i]}
+                                            {instrumentOptions[instI].label ==
+                                            "Drums"
+                                                ? indToDrum[i]
+                                                : indToNote[i]}
+                                        </div>
+                                        <div>
+                                            {noteMapRef?.current
+                                                ? noteMapRef.current[
+                                                      instrumentOptions[instI]
+                                                          .label
+                                                  ].repeatStage
+                                                : ""}
                                         </div>
                                     </div>
-                                )
-                            })
-                        }
+                                );
+                        })}
                     </div>
                 </div>
             </div>

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 import {
     drumMappings,
     initWebAudioFont,
@@ -13,10 +13,10 @@ import { ImgData } from "../types/WebsocketTypes";
  * This prevents collisions when you have multiple instruments
  * that can each have repeating or indefinite notes.
  */
-type NoteMap = Record<string, NoteRefData[]>;
+export type NoteMap = Record<string, NoteRefData[]>;
 
 /** For each note, we store indefinite or repeat logic. */
-type NoteRefData = {
+export type NoteRefData = {
     audioCtx: AudioContext | null;
     player: any | null;
     gainNode: GainNode | null;
@@ -24,23 +24,14 @@ type NoteRefData = {
     startTime: number;
     timeoutId: ReturnType<typeof setTimeout> | null;
     colState: 0 | 1 | 2; // 0=release,1=pressed,2=toggle mode
-    repeatStage: number; // 0=off,1=1 beat,2=1/2,3=1/4,4=1/8,5=1/16
+    repeatStage: number; // 0=off,1=1 beat,2=1/2,3=1/4,4=1/8,5=1/16,
     repeatTimer?: number; // the setInterval ID
 };
 
 const BPM = 60;
 const secPerBeat = 60 / BPM;
 
-const indToNote = [
-    "C4",
-    "D4",
-    "E4",
-    "F4",
-    "G4",
-    "A4",
-    "B4",
-    "C5"
-]
+const indToNote = ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"];
 
 const indToDrum = [
     "Bass",
@@ -49,8 +40,8 @@ const indToDrum = [
     "Crash",
     "Tom 1",
     "Tom 2",
-    "Tom 3"
-]
+    "Tom 3",
+];
 
 // 8 melodic note definitions
 const melodyData = [
@@ -67,13 +58,22 @@ const melodyData = [
 // Drums: 7 of them
 const drumCount = 7;
 
-export default function Instruments({ imgData, setInst, instI }: { imgData: ImgData, setInst:any, instI:number }) {
+export default function Instruments({
+    imgData,
+    setInst,
+    instI,
+    noteMapRef,
+}: {
+    imgData: ImgData;
+    setInst: any;
+    instI: number;
+    noteMapRef: RefObject<NoteMap>;
+}) {
     // 1) Which instrument index is selected, e.g. 0=Flute, 1=Drums, etc.
     const selectedInstrument = instrumentOptions[instI];
     const isDrums = selectedInstrument.label === "Drums";
 
     // 2) Dictionary of instrumentName -> array of references
-    const noteMapRef = useRef<NoteMap>({});
 
     // Helper to create a new note reference
     function makeNoteRef(): NoteRefData {
@@ -345,6 +345,18 @@ export default function Instruments({ imgData, setInst, instI }: { imgData: ImgD
         }, fadeSec * 1000);
     }
 
+    useEffect(() => {
+        const resetCol = imgData.cols.find((col) => col.name === "top");
+        if (!resetCol) return;
+        if (resetCol.col > 0) {
+            const noteRefs = getRefsForInstrument(selectedInstrument.label);
+            noteRefs.forEach((refData) => {
+                stopRepeating(refData);
+                refData.repeatStage = 0;
+            });
+        }
+    }, [imgData.cols, selectedInstrument.label]);
+
     // 7) When new imgData arrives, interpret it as controlling the currently selected instrument
     useEffect(() => {
         if (!imgData?.cols?.length) return;
@@ -396,24 +408,35 @@ export default function Instruments({ imgData, setInst, instI }: { imgData: ImgD
         });
     }, [imgData, selectedInstrument]);
 
-    const leftActiveRef = useRef(false);
-    const rightActiveRef = useRef(false);
-
     return (
-        <div className="px-2 flex flex-col">
-            {instrumentOptions.map((v)=>{
-                if(noteMapRef.current[v.label])
-                    return(<div className="flex flex-col">
-                        {noteMapRef.current[v.label].map((e, i)=>{
-                            return((e.repeatStage != 0) &&
-                            <div className="font-bold">
-                                {v.label}
-                                <div className="font-normal pl-4">
-                                    {`${v.label == "Drums" ? indToDrum[i] : indToNote[i]}: ${e.repeatStage} / 5`}
-                                </div>
-                            </div>)
-                        })}
-                    </div>)
+        <div className="px-8 flex flex-col">
+            <div className="text-3xl font-bold">GhostJam</div>
+            <div className="pl-2 text-xl font-semibold">{`Group: ${selectedInstrument.group
+                .charAt(0)
+                .toUpperCase()}${selectedInstrument.group.slice(1)}`}</div>
+            <div className="pl-2 text-xl font-semibold">{`Instrument: ${selectedInstrument.label}`}</div>
+            {instrumentOptions.map((v) => {
+                if (noteMapRef.current[v.label])
+                    return (
+                        <div className="flex flex-col" key={v.label}>
+                            {noteMapRef.current[v.label].map((e, i) => {
+                                return (
+                                    e.repeatStage != 0 && (
+                                        <div className="font-bold">
+                                            {v.label}
+                                            <div className="font-normal pl-4">
+                                                {`${
+                                                    v.label == "Drums"
+                                                        ? indToDrum[i]
+                                                        : indToNote[i]
+                                                }: ${e.repeatStage} / 5`}
+                                            </div>
+                                        </div>
+                                    )
+                                );
+                            })}
+                        </div>
+                    );
             })}
         </div>
     );

@@ -4,7 +4,7 @@ export type InstrumentMeta = {
     label: string;
     scriptUrl: string;
     globalVar: string;
-    group?: string;
+    group: string;
 };
 
 export const instrumentOptions: InstrumentMeta[] = [

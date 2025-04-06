@@ -33,11 +33,7 @@ class Rectangle:
 # mp_draw = mp.solutions.drawing_utils
 
 mp_pose = mp.solutions.pose
-mp_pose_model = mp_pose.Pose(static_image_mode=False,
-                    model_complexity=1,
-                    enable_segmentation=False,
-                    min_detection_confidence=.5,
-                    min_tracking_confidence=.5)
+mp_pose_model = mp_pose.Pose(static_image_mode=False, model_complexity=1, enable_segmentation=False, min_detection_confidence=0.5, min_tracking_confidence=0.5)
 mp_draw = mp.solutions.drawing_utils
 
 pose = YOLO("yolo11n-pose.pt")
@@ -63,7 +59,7 @@ async def websocket_endpoint(websocket: WebSocket):
             # Parse JSON
             payload = json.loads(data)
 
-            multiplayer = False
+            multiplayer = payload["multiplayer"] == "true"
             base64_data = payload["data"]
 
             # Get proper payload from base64 data
@@ -142,8 +138,8 @@ def alter_mediapipe(img_rgb, handPts):
 
 
 def alter_image(file_path, multiplayer):
-    img = cv2.imread(file_path)
-    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img_rgb = cv2.imread(file_path)
+    # img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     handPts = []
 
@@ -164,10 +160,17 @@ def alter_image(file_path, multiplayer):
     for i in range(0, n):
         rects.append(Rectangle("note" + str(i), w - (wOff * i), h, w - (wOff * (i + 1)) + pad, h - 40))
 
-    rects.append(Rectangle("top", sideLengths, 0, w - sideLengths, sideLengths))  # TOP
+    padding = 4
+    top_box_height = 40
+    usable_width = w - 2 * sideLengths
+    top_box_width = (usable_width - 2 * padding) // 3
+    start_x = sideLengths
+
     rects.append(Rectangle("right", w, 0, w - sideLengths, h - 80))  # RIGHT
     rects.append(Rectangle("left", 0, 0, sideLengths, h - 80))  # LEFT
-
+    rects.append(Rectangle("topleft", start_x, 0, start_x + top_box_width, top_box_height))
+    rects.append(Rectangle("top", start_x + top_box_width + padding, 0, start_x + 2 * top_box_width + padding, top_box_height))
+    rects.append(Rectangle("topright", start_x + 2 * (top_box_width + padding), 0, start_x + 3 * top_box_width + 2 * padding, top_box_height))
     for r in rects:
         renderRect(r, handPts, img_rgb)
         res.append({"name": r.name, "col": r.collided})
@@ -183,7 +186,7 @@ def renderRect(rect: Rectangle, pts, img):
         if checkCollide(rect, np):
             rect.collided += 1
 
-    #cv2.rectangle(img, (rect.x1, rect.y1), (rect.x2, rect.y2), (255 if rect.collided == 1 else 0, 0 if rect.collided != 0 else 255, 255 if rect.collided >= 2 else 0), 2)
+    cv2.rectangle(img, (rect.x1, rect.y1), (rect.x2, rect.y2), (255 if rect.collided == 1 else 0, 0 if rect.collided != 0 else 255, 255 if rect.collided >= 2 else 0), 2)
 
 
 def checkCollide(rect: Rectangle, p):
