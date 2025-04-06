@@ -6,14 +6,9 @@ import uuid
 from pathlib import Path
 
 import cv2
+import mediapipe as mp
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
-import base64
-import os
-import json
-import cv2
-import asyncio
-import mediapipe as mp
 from ultralytics.models import YOLO
 
 
@@ -32,16 +27,13 @@ class Rectangle:
         self.y1 = y1
         self.y2 = y2
 
+
 # mp_hands = mp.solutions.hands
 # hands = mp_hands.Hands(static_image_mode=True, max_num_hands=10, min_detection_confidence=0.3, min_tracking_confidence=0.2, model_complexity=1)
 # mp_draw = mp.solutions.drawing_utils
 
 mp_pose = mp.solutions.pose
-mp_pose_model = mp_pose.Pose(static_image_mode=False,
-                    model_complexity=2,
-                    enable_segmentation=False,
-                    min_detection_confidence=0.5,
-                    min_tracking_confidence=0.5)
+mp_pose_model = mp_pose.Pose(static_image_mode=False, model_complexity=2, enable_segmentation=False, min_detection_confidence=0.5, min_tracking_confidence=0.5)
 mp_draw = mp.solutions.drawing_utils
 
 pose = YOLO("yolo11n-pose.pt")
@@ -67,7 +59,7 @@ async def websocket_endpoint(websocket: WebSocket):
             # Parse JSON
             payload = json.loads(data)
 
-            multiplayer = False
+            multiplayer = True
             base64_data = payload["data"]
 
             # Get proper payload from base64 data
@@ -130,7 +122,6 @@ def alter_yolo(img_rgb, handPts):
 def alter_mediapipe(img_rgb, handPts):
     result = mp_pose_model.process(img_rgb)
 
-
     HAND_LANDMARKS = [
         mp_pose.PoseLandmark.LEFT_WRIST,
         mp_pose.PoseLandmark.RIGHT_WRIST,
@@ -145,18 +136,19 @@ def alter_mediapipe(img_rgb, handPts):
             handPts.append((x, y, landmark.visibility))
             cv2.circle(img_rgb, (x, y), 6, (0, 255, 0), cv2.FILLED)
 
+
 def alter_image(file_path, multiplayer):
     img_rgb = cv2.imread(file_path)
 
     handPts = []
 
-    if (multiplayer):
+    if multiplayer:
         alter_yolo(img_rgb, handPts)
     else:
         alter_mediapipe(img_rgb, handPts)
-   
+
     n = 8
-    wOff = int(w/n)
+    wOff = int(w / n)
     pad = 4
     rects = []
 
