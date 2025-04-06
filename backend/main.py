@@ -1,5 +1,11 @@
-from pathlib import Path
+import asyncio
+import base64
+import json
+import os
 import uuid
+from pathlib import Path
+
+import cv2
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 import base64
@@ -9,6 +15,7 @@ import cv2
 import asyncio
 import mediapipe as mp
 from ultralytics.models import YOLO
+
 
 class Rectangle:
     name = ""
@@ -45,6 +52,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 w, h = 320, 180
 
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -54,7 +62,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         while True:
-            # Take JSON 
+            # Take JSON
             data = await websocket.receive_text()
             # Parse JSON
             payload = json.loads(data)
@@ -87,18 +95,18 @@ def alter_yolo(img_rgb, handPts):
     pts = poseRes[0].keypoints.data
 
     skeleton = [
-        #(5, 7),
+        # (5, 7),
         (7, 9),  # Left arm
-        #(6, 8),
+        # (6, 8),
         (8, 10),  # Right arm
-        #(5, 6),  # Shoulders
-        #(5, 11),
-        #(6, 12),  # Torso to hips
-        #(11, 12),  # Hips
-        #(11, 13),
-        #13, 15),  # Left leg
-        #(12, 14),
-        #(14, 16),  # Right leg
+        # (5, 6),  # Shoulders
+        # (5, 11),
+        # (6, 12),  # Torso to hips
+        # (11, 12),  # Hips
+        # (11, 13),
+        # 13, 15),  # Left leg
+        # (12, 14),
+        # (14, 16),  # Right leg
     ]
 
     for person in pts:
@@ -107,7 +115,7 @@ def alter_yolo(img_rgb, handPts):
             continue
 
         # Draw keypoints
-        for i in range(9,11):
+        for i in range(9, 11):
             kp = kps[i]
             handPts.append(kp)
             if len(kp) == 3:  # Ensure keypoint has (x, y, confidence)
@@ -152,42 +160,44 @@ def alter_image(file_path, multiplayer):
     pad = 4
     rects = []
 
-    sideLengths = int(w/20)
-    
-    rects.append(Rectangle("top", sideLengths, 0, w-sideLengths, sideLengths)) # TOP 
-    rects.append(Rectangle("right", w, sideLengths, w-sideLengths, h-sideLengths)) # RIGHT
-    rects.append(Rectangle("left", 0, sideLengths, sideLengths, h-sideLengths)) # LEFT
+    sideLengths = int(w / 20)
 
+    res = []  # stores booleans of whether each note is being collided with
 
-    res = [] #stores booleans of whether each note is being collided with
+    for i in range(0, n):
+        rects.append(Rectangle("note" + str(i), w - (wOff * i), h, w - (wOff * (i + 1)) + pad, h - 40))
 
-    
-    for i in range(0,n):
-        rects.append(Rectangle("note"+str(i), w-(wOff*i), h, w-(wOff*(i+1))+pad, h-40))
-      
+    rects.append(Rectangle("top", sideLengths, 0, w - sideLengths, sideLengths))  # TOP
+    rects.append(Rectangle("right", w, sideLengths, w - sideLengths, h - sideLengths))  # RIGHT
+    rects.append(Rectangle("left", 0, sideLengths, sideLengths, h - sideLengths))  # LEFT
+
     for r in rects:
         renderRect(r, handPts, img_rgb)
         res.append({"name": r.name, "col": r.collided})
-    
+
     data = {"data": image_array_to_base64(img_rgb), "cols": res}
     return data
 
-def renderRect(rect:Rectangle, pts, img):
 
+def renderRect(rect: Rectangle, pts, img):
     for p in pts:
         x, y, conf = p
         np = [x, y]
         if checkCollide(rect, np):
             rect.collided += 1
 
-    cv2.rectangle(img, (rect.x1, rect.y1), (rect.x2, rect.y2), (255 if rect.collided == 1 else 0,0 if rect.collided != 0 else 255,255 if rect.collided >= 2 else 0), 2)
+    cv2.rectangle(img, (rect.x1, rect.y1), (rect.x2, rect.y2), (255 if rect.collided == 1 else 0, 0 if rect.collided != 0 else 255, 255 if rect.collided >= 2 else 0), 2)
 
-def checkCollide(rect:Rectangle, p):
+
+def checkCollide(rect: Rectangle, p):
     copy = rect
-    if (copy.x1 < copy.x2): copy.x1, copy.x2 = copy.x2, copy.x1
-    if (copy.y1 < copy.y2): copy.y1, copy.y2 = copy.y2, copy.y1
+    if copy.x1 < copy.x2:
+        copy.x1, copy.x2 = copy.x2, copy.x1
+    if copy.y1 < copy.y2:
+        copy.y1, copy.y2 = copy.y2, copy.y1
 
     return p[0] < copy.x1 and p[0] > copy.x2 and p[1] < copy.y1 and p[1] > copy.y2
+
 
 def image_array_to_base64(image_np, format=".png"):
     # Encode image to memory
