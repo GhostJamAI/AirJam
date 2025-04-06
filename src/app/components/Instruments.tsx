@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import {
     drumMappings,
     initWebAudioFont,
-    InstrumentMeta,
     instrumentOptions,
 } from "../../utils/utils";
 import { ImgData } from "../types/WebsocketTypes";
@@ -31,15 +30,22 @@ const melodyData = [
     { label: "C5", midi: 72 },
 ];
 
-export default function Instruments({ imgData, setInst, instI }: { imgData: ImgData, setInst: any, instI: number }) {
+export default function Instruments({
+    imgData,
+    setInst,
+    instI,
+}: {
+    imgData: ImgData;
+    setInst: any;
+    instI: number;
+}) {
     const [loaded, setLoaded] = useState(false);
     const [isDrums, setIsDrums] = useState(false);
-    const instrument = instrumentOptions[instI]
-    
-    useEffect(()=>{
-        if(instrument != undefined)
-            setIsDrums(instrument.label === "Drums")
-    },[instrument])
+    const instrument = instrumentOptions[instI];
+
+    useEffect(() => {
+        if (instrument != undefined) setIsDrums(instrument.label === "Drums");
+    }, [instrument]);
 
     // --- Refs for melody (with colState=0 initially) ---
     const c4Ref = useRef<NoteRefData>({
@@ -283,8 +289,7 @@ export default function Instruments({ imgData, setInst, instI }: { imgData: ImgD
         if (isDrums && globalVar) {
             instrumentData = (window as any)[globalVar];
         } else {
-            instrumentData =
-                (window as any)[instrument.globalVar] || null;
+            instrumentData = (window as any)[instrument.globalVar] || null;
         }
         if (!instrumentData) {
             console.warn(
@@ -418,7 +423,11 @@ export default function Instruments({ imgData, setInst, instI }: { imgData: ImgD
                             setInst(chosen);
                         }
                     }}
-                    value={instrument != undefined ? instrument.label : "Loading instrument.."}
+                    value={
+                        instrument != undefined
+                            ? instrument.label
+                            : "Loading instrument.."
+                    }
                 >
                     {instrumentOptions.map((inst) => (
                         <option key={inst.label} value={inst.label}>
