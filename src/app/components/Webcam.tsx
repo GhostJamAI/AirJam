@@ -161,10 +161,10 @@ export default function Webcam({
                         ref={imgRef}
                         className="-scale-x-[100%] w-full border-2 border-black rounded-xl"
                     />
-                    <div className="absolute flex p-1 flex-row top-0 w-full text-white h-[24vw]">
+                    <div className="absolute flex p-1 flex-row top-0 w-full text-black h-[24vw]">
                         {/* Left box */}
                         <div
-                            className={`h-full w-[7.5vw] rounded-tl-xl flex flex-col items-center justify-center ${
+                            className={`h-full w-[7.5vw] rounded-tl-xl flex flex-col items-center justify-center text-2xl ${
                                 !imgData.cols[rightIndex]
                                     ? ""
                                     : imgData.cols[rightIndex].col >= 1
@@ -178,7 +178,7 @@ export default function Webcam({
                         {/* Center three buttons */}
                         <div className="flex h-[9.5vw] w-[60vw] gap-1 px-1">
                             <div
-                                className={`w-1/3 h-full flex items-center justify-center rounded-md ${
+                                className={`w-1/3 h-full flex items-center justify-center rounded-md text-4xl ${
                                     !imgData.cols[nextGroupIndex]
                                         ? ""
                                         : imgData.cols[nextGroupIndex].col >= 1
@@ -189,7 +189,7 @@ export default function Webcam({
                                 Previous Group
                             </div>
                             <div
-                                className={`w-1/3 h-full flex items-center justify-center rounded-md ${
+                                className={`w-1/3 h-full flex items-center justify-center rounded-md text-4xl ${
                                     !imgData.cols[resetIndex]
                                         ? ""
                                         : imgData.cols[resetIndex].col >= 1
@@ -200,7 +200,7 @@ export default function Webcam({
                                 Reset Tempo
                             </div>
                             <div
-                                className={`w-1/3 h-full flex items-center justify-center rounded-md ${
+                                className={`w-1/3 h-full flex items-center justify-center rounded-md text-4xl ${
                                     !imgData.cols[prevGroupIndex]
                                         ? ""
                                         : imgData.cols[prevGroupIndex].col >= 1
@@ -214,7 +214,7 @@ export default function Webcam({
 
                         {/* Right box */}
                         <div
-                            className={`h-full w-[7.5vw] rounded-tr-xl flex flex-col items-center justify-center ${
+                            className={`h-full w-[7.5vw] rounded-tr-xl flex flex-col items-center text-2xl justify-center ${
                                 !imgData.cols[leftIndex]
                                     ? ""
                                     : imgData.cols[leftIndex].col >= 1
@@ -238,7 +238,7 @@ export default function Webcam({
                                 return (
                                     <div
                                         key={i}
-                                        className={`text-white flex flex-col text-center rounded-xl m-1
+                                        className={`text-black text-5xl flex flex-col text-center rounded-xl m-1
                                         ${
                                             v.col >= 2
                                                 ? "bg-[#50ffbfb3]"
