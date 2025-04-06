@@ -3,6 +3,8 @@ import base64
 import json
 import os
 import uuid
+import time
+import math
 from pathlib import Path
 
 import cv2
@@ -44,7 +46,6 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 w, h = 320, 180
 
-
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -70,14 +71,12 @@ async def websocket_endpoint(websocket: WebSocket):
             image_bytes = base64.b64decode(base64_data)
             with open(file_path, "wb") as f:
                 f.write(image_bytes)
-            print(f"Saved {random_filename}")
 
             send_data = await asyncio.to_thread(alter_image, file_path, multiplayer)
             await websocket.send_text(json.dumps({"data": send_data["data"], "cols": send_data["cols"]}))
     except WebSocketDisconnect:
         if os.path.exists(file_path):
             os.remove(file_path)
-            print(f"[Deleted] {random_filename}")
         else:
             print(f"[Missing] File was not found: {random_filename}")
 
@@ -116,7 +115,7 @@ def alter_yolo(img_rgb, handPts):
                     x, y = int(x), int(y)
                     # Ensure the coordinates are within the image bounds
                     if 0 <= x < img_rgb.shape[1] and 0 <= y < img_rgb.shape[0]:
-                        cv2.circle(img_rgb, (x, y), 3, (255, 0, 0), -1)  # Red points
+                        draw_pulsing_circle(img_rgb, x, y, 3) 
 
 
 def alter_mediapipe(img_rgb, handPts):
@@ -134,7 +133,7 @@ def alter_mediapipe(img_rgb, handPts):
             h, w, _ = img_rgb.shape
             x, y = int(landmark.x * w), int(landmark.y * h)
             handPts.append((x, y, landmark.visibility))
-            cv2.circle(img_rgb, (x, y), 6, (0, 255, 0), cv2.FILLED)
+            draw_pulsing_circle(img_rgb, x, y, 3)        
 
 def is_index_finger_up(landmarks):
     # Check if the index finger is extended: tip (8) is above the PIP joint (6)
@@ -155,7 +154,6 @@ def alter_image(file_path, multiplayer):
 
     active_hands = 0
 
-    print(active_hands)
     handPts = []
 
     if multiplayer:
@@ -173,7 +171,7 @@ def alter_image(file_path, multiplayer):
                     for idx in index_finger_indices:
                         x = int(hand_landmarks.landmark[idx].x * w2)
                         y = int(hand_landmarks.landmark[idx].y * h2)
-                        cv2.circle(img_rgb, (x, y), 5, (0, 255, 0), -1)
+                        draw_pulsing_circle(img_rgb, x, y, 3)
                     active_hands = 1
                 else:
                     active_hands = 0
@@ -206,6 +204,15 @@ def alter_image(file_path, multiplayer):
 
     data = {"data": image_array_to_base64(img_rgb), "cols": res}
     return data
+
+def draw_pulsing_circle(img, x, y, base_radius=3):
+    t = time.time() * 5  # speed of pulse
+    pulse = int(math.fabs(math.sin(t)) * 2 + base_radius)
+    color1 = (29, 53, 51)
+    color2 = (16, 17, 25)
+    cv2.circle(img, (x, y), base_radius, color1, -1)
+    cv2.circle(img, (x, y), pulse, color2, 2, lineType=cv2.LINE_AA)
+
 
 
 def renderRect(rect: Rectangle, pts, img, active_hands=0):

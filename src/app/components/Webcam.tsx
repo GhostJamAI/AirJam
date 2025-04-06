@@ -5,6 +5,7 @@ import { instrumentOptions } from "@/utils/utils";
 import { RefObject, useEffect, useRef, useState } from "react";
 import { ImgData } from "../types/WebsocketTypes";
 import { NoteMap } from "./Instruments";
+import { ArrowBigLeft, ArrowBigRight, ArrowLeft, ArrowRight, MoveLeft, MoveRight } from "lucide-react";
 
 const arrayRange = (start: number, stop: number, step = 1) =>
     Array.from(
@@ -168,53 +169,53 @@ export default function Webcam({
                 <div className="relative w-[75vw] mx-auto">
                     <img
                         ref={imgRef}
-                        className="-scale-x-[100%] w-full border-2 border-black rounded-xl"
+                        className="-scale-x-[100%] w-full shadow-xl border-2 border-black rounded-xl"
                     />
-                    <div className="absolute flex p-1 flex-row top-0 w-full text-black h-[24vw]">
+                    <div className="absolute flex p-1 flex-row top-0 w-full text-black font-serif h-[24vw]">
                         {/* Left box */}
                         <div
-                            className={`h-full w-[7.5vw] rounded-tl-xl flex flex-col items-center justify-center text-2xl ${
+                            className={`h-full w-[7.5vw] rounded-xl flex flex-col items-center justify-center text-2xl ${
                                 !imgData.cols[rightIndex]
                                     ? ""
                                     : imgData.cols[rightIndex].col >= 1
-                                    ? "bg-[#50adff75]"
-                                    : "bg-[#e1c7c775]"
+                                    ? "bg-[#6F73D275]"
+                                    : "bg-[#EFF1ED75]"
                             }`}
                         >
-                            <div>Previous</div> <div> Instrument</div>
+                            <ArrowBigLeft className="size-16"/>
                         </div>
 
                         {/* Center three buttons */}
-                        <div className="flex h-[9.5vw] w-[60vw] gap-1 px-1">
+                        <div className="flex h-[9.5vw] w-[60vw] gap-1 px-1 font-serif">
                             <div
-                                className={`w-1/3 h-full flex items-center justify-center rounded-md text-4xl ${
+                                className={`w-1/3 h-full flex items-center justify-center rounded-xl text-4xl ${
                                     !imgData.cols[nextGroupIndex]
                                         ? ""
                                         : imgData.cols[nextGroupIndex].col >= 1
-                                        ? "bg-[#50adff75]"
-                                        : "bg-[#e1c7c775]"
+                                        ? "bg-[#6F73D275]"
+                                        : "bg-[#EFF1ED75]"
                                 }`}
                             >
                                 Previous Group
                             </div>
                             <div
-                                className={`w-1/3 h-full flex items-center justify-center rounded-md text-4xl ${
+                                className={`w-1/3 h-full flex items-center text-center justify-center rounded-xl text-4xl ${
                                     !imgData.cols[resetIndex]
                                         ? ""
                                         : imgData.cols[resetIndex].col >= 1
-                                        ? "bg-[#50adff75]"
-                                        : "bg-[#e1c7c775]"
+                                        ? "bg-[#6F73D275]"
+                                        : "bg-[#EFF1ED75]"
                                 }`}
                             >
-                                Reset Tempo
+                                Reset Instrument Tempo
                             </div>
                             <div
-                                className={`w-1/3 h-full flex items-center justify-center rounded-md text-4xl ${
+                                className={`w-1/3 h-full flex items-center justify-center rounded-xl text-4xl ${
                                     !imgData.cols[prevGroupIndex]
                                         ? ""
                                         : imgData.cols[prevGroupIndex].col >= 1
-                                        ? "bg-[#50adff75]"
-                                        : "bg-[#e1c7c775]"
+                                        ? "bg-[#6F73D275]"
+                                        : "bg-[#EFF1ED75]"
                                 }`}
                             >
                                 Next Group
@@ -223,15 +224,15 @@ export default function Webcam({
 
                         {/* Right box */}
                         <div
-                            className={`h-full w-[7.5vw] rounded-tr-xl flex flex-col items-center text-2xl justify-center ${
+                            className={`h-full w-[7.5vw] rounded-xl flex flex-col items-center text-2xl justify-center ${
                                 !imgData.cols[leftIndex]
                                     ? ""
                                     : imgData.cols[leftIndex].col >= 1
-                                    ? "bg-[#50adff75]"
-                                    : "bg-[#e1c7c775]"
+                                    ? "bg-[#6F73D275]"
+                                    : "bg-[#EFF1ED75]"
                             }`}
                         >
-                            <div>Next</div> <div> Instrument</div>
+                            <ArrowBigRight className="size-16"/>
                         </div>
                     </div>
                     <div
@@ -247,31 +248,33 @@ export default function Webcam({
                                 return (
                                     <div
                                         key={i}
-                                        className={`text-black text-5xl flex flex-col text-center rounded-xl m-1
+                                        className={`text-black text-5xl shadow flex flex-col text-center rounded-xl m-1
                                         ${
                                             v.col >= 2
-                                                ? "bg-[#50ffbfb3]"
+                                                ? "bg-[#43aa8b75]"
                                                 : v.col == 1
-                                                ? "bg-[#50fff975]"
-                                                : "bg-[#e1c7c775]"
+                                                ? "bg-[#6F73D275]"
+                                                : "bg-[#EFF1ED75]"
                                         }`}
                                     >
-                                        <div className="my-auto w-full">
+                                        <div className="my-auto w-full font-serif">
                                             {instrumentOptions[instI].label ==
                                             "Drums"
                                                 ? indToDrum[i]
                                                 : indToNote[i]}
                                         </div>
 
-                                        <div className="grid grid-cols-5">
+                                        <div className="grid grid-cols-5 gap-2 pl-2 pr-3 py-2">
                                             {noteMapRef?.current && noteMapRef?.current[instrumentOptions[instI].label] &&
-                                            noteMapRef?.current[instrumentOptions[instI].label][i].repeatStage > 0 &&
+                                            noteMapRef?.current[instrumentOptions[instI].label][i].repeatStage > 0 ?
                                                 arrayRange(1,5,1).map((v)=>{
                                                     if(v <= noteMapRef?.current[instrumentOptions[instI].label][i].repeatStage)
-                                                    return(<div className="rounded-full bg-teritary">
+                                                    return(<div className="rounded-full shadow border-2 border-primary size-[1.2vw] text-transparent bg-secondary">
                                                         #
                                                     </div>)
                                                 })
+                                                
+                                            : <div className="text-transparent size-[1.2vw]">#</div>
                                             }
                                         </div>
                                     </div>

@@ -4,9 +4,12 @@
   --background: #ffffff;
   --foreground: #171717;
   --white: #EFF1ED;
+  --whiteT: #EFF1ED75;
   --black: #101119;
   --secondary: #43AA8B;
   --teritary: #6F73D2;
+  --secondaryT: #43aa8b75;
+  --teritaryT: #6F73D275;
   --primary: #1D3533;
 }
 

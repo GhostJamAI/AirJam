@@ -8,6 +8,12 @@ import {
 } from "../../utils/utils";
 import { ImgData } from "../types/WebsocketTypes";
 
+const arrayRange = (start: number, stop: number, step = 1) =>
+    Array.from(
+        { length: Math.ceil((stop - start) / step) + 1 },
+        (value, index) => start + index * step
+    );
+
 /**
  * Each instrument label -> array of NoteRefData.
  * This prevents collisions when you have multiple instruments
@@ -430,29 +436,24 @@ export default function Instruments({
                 className=" flex justify-center items-start gap-4
             "
             >
-                <div className="text-3xl font-bold">GhostJam</div>
+                <div className="text-3xl font-bold">AirJam</div>
                 <button
                     className={`${
                         multi == "true" ? "bg-secondary" : "bg-teritary"
-                    } p-2 rounded-xl transition-colors duration-1000`}
+                    } p-2 rounded-xl transition-colors cursor-pointer duration-1000`}
                     onClick={() => {
                         setMulti(multi === "true" ? "false" : "true");
                     }}
                 >
-                    {`Toggle Multiplayer: ${multi === "true" ? "ON" : "OFF"}`}
+                    {`Multiplayer: ${multi === "true" ? "ON" : "OFF"}`}
                 </button>
             </div>
             <div className="border border-gray-600 my-2" />
-            <div className="text-2xl font-bold">Instrument Info</div>
-            <div className="text-xl">
-                <span className="font-bold">Group:</span>{" "}
-                {`${selectedInstrument.group
+            <div className="text-[32px] font-serif font-bold text-center">{selectedInstrument.label}</div>
+            <div className="text-xl font-serif font-extralight text-center">
+                {`~ ${selectedInstrument.group
                     .charAt(0)
-                    .toUpperCase()}${selectedInstrument.group.slice(1)}`}
-            </div>
-            <div className="text-xl">
-                <span className="font-bold">Instrument:</span>{" "}
-                {selectedInstrument.label}
+                    .toUpperCase()}${selectedInstrument.group.slice(1)} ~`}
             </div>
             {instrumentOptions.some((v) =>
                 noteMapRef.current[v.label]?.some((e) => e.repeatStage != 0)
@@ -471,14 +472,24 @@ export default function Instruments({
                             {noteMapRef.current[v.label].map((e, i) => {
                                 return (
                                     e.repeatStage != 0 && (
-                                        <div className="font-bold">
+                                        <div className="font-bold font-serif">
                                             {v.label}
-                                            <div className="font-normal pl-4">
+                                            <div className="font-normal flex flex-row pl-4">
                                                 {`${
                                                     v.label == "Drums"
                                                         ? indToDrum[i]
                                                         : indToNote[i]
-                                                }: ${e.repeatStage} / 5`}
+                                                }:`}
+                                                <div className="grid grid-cols-6 gap-1 pl-2 my-auto">
+                                                    {
+                                                        arrayRange(1,5,1).map((v)=>{
+                                                            if(v <= e.repeatStage)
+                                                            return(<div className="rounded-full shadow size-[1.2vw] text-transparent bg-secondary">
+                                                                #
+                                                            </div>)
+                                                        })
+                                                    }
+                                                </div>
                                             </div>
                                         </div>
                                     )
