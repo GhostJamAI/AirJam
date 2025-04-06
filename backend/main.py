@@ -15,7 +15,7 @@ class Rectangle:
     y1 = 0
     x2 = 0
     y2 = 0
-    collided = False
+    collided = 0
 
     def __init__(self, name, x1, y1, x2, y2):
         self.name = name
@@ -160,9 +160,9 @@ def renderRect(rect:Rectangle, pts, img):
         x, y, conf = p
         np = [x, y]
         if checkCollide(rect, np):
-            rect.collided = True
+            rect.collided += 1
 
-    cv2.rectangle(img, (rect.x1, rect.y1), (rect.x2, rect.y2), (255 if rect.collided else 0,0 if rect.collided else 255,0), 2)
+    cv2.rectangle(img, (rect.x1, rect.y1), (rect.x2, rect.y2), (255 if rect.collided == 1 else 0,0 if rect.collided != 0 else 255,255 if rect.collided >= 2 else 0), 2)
 
 def checkCollide(rect:Rectangle, p):
     copy = rect

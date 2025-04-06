@@ -1,6 +1,6 @@
 export type WebsocketFrame = {
     data: string, 
-    cols:ColData[]
+    cols: ColData[]
 }
 
 export type ImgData = {
@@ -11,5 +11,5 @@ export type ImgData = {
 
 export type ColData = {
     name: string
-    col: boolean
+    col: number
 }
