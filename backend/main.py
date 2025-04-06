@@ -15,6 +15,8 @@ app = FastAPI()
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+w, h = 320, 180
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -73,12 +75,14 @@ def alter_image(file_path):
         #(14, 16),  # Right leg
     ]
 
+    handPts = [0,0]
+
     for person in pts:
         kps = person.cpu().numpy()
         if kps.size == 0:  # Skip if no keypoints are detected
             continue
 
-        
+        """
         # Draw skeleton connections
         for start_idx, end_idx in skeleton:
             # Check if keypoint indices are valid
@@ -96,9 +100,12 @@ def alter_image(file_path):
                         if end_x == 0 and end_y == 0:
                             continue
                         cv2.line(img_rgb, (start_x, start_y), (end_x, end_y), (0, 0, 255), 2)  # Blue lines
+        """
         
         # Draw keypoints
-        for kp in kps:
+        for i in range(9,11):
+            kp = kps[i]
+            handPts[i-9] = kp
             if len(kp) == 3:  # Ensure keypoint has (x, y, confidence)
                 x, y, conf = kp
                 if conf > 0.3:  # Confidence threshold
@@ -106,6 +113,12 @@ def alter_image(file_path):
                     # Ensure the coordinates are within the image bounds
                     if 0 <= x < img_rgb.shape[1] and 0 <= y < img_rgb.shape[0]:
                         cv2.circle(img_rgb, (x, y), 3, (255, 0, 0), -1)  # Red points
+    
+    n = 8
+    for i in range(0,n):
+        wOff = int(w/n)
+        pad = 4
+        cv2.rectangle(img_rgb, (w-(wOff*i),h), (w-(wOff*(i+1))+pad,h-40), (0,255,0), 2)
 
     data = image_array_to_base64(img_rgb)
     return data
