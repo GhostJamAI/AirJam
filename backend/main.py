@@ -36,8 +36,8 @@ mp_pose = mp.solutions.pose
 mp_pose_model = mp_pose.Pose(static_image_mode=False,
                     model_complexity=1,
                     enable_segmentation=False,
-                    min_detection_confidence=.9,
-                    min_tracking_confidence=.9)
+                    min_detection_confidence=.5,
+                    min_tracking_confidence=.5)
 mp_draw = mp.solutions.drawing_utils
 
 pose = YOLO("yolo11n-pose.pt")
@@ -127,8 +127,8 @@ def alter_mediapipe(img_rgb, handPts):
     result = mp_pose_model.process(img_rgb)
 
     HAND_LANDMARKS = [
-        mp_pose.PoseLandmark.LEFT_INDEX,
-        mp_pose.PoseLandmark.RIGHT_INDEX,
+        mp_pose.PoseLandmark.LEFT_WRIST,
+        mp_pose.PoseLandmark.RIGHT_WRIST,
     ]
 
     # Draw pose landmarks
