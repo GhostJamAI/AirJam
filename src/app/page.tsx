@@ -45,6 +45,11 @@ export default function Home() {
             <div className="p-4 font-bold">GhostJam</div>
             <div className="flex flex-row">
                 <Instruments />
+                <Webcam
+                    imgData={imgData}
+                    ws={ws.current}
+                    sendImage={sendImage}
+                />
             </div>
         </div>
     );
