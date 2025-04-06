@@ -432,8 +432,9 @@ export default function Instruments({
             >
                 <div className="text-3xl font-bold">GhostJam</div>
                 <button
-                    className="bg-slate-900 p-2
-                 rounded-xl"
+                    className={`${
+                        multi == "true" ? "bg-secondary" : "bg-teritary"
+                    } p-2 rounded-xl transition-colors duration-1000`}
                     onClick={() => {
                         setMulti(multi === "true" ? "false" : "true");
                     }}

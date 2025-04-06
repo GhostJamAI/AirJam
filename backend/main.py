@@ -28,12 +28,12 @@ class Rectangle:
         self.y2 = y2
 
 
-# mp_hands = mp.solutions.hands
-# hands = mp_hands.Hands(static_image_mode=True, max_num_hands=10, min_detection_confidence=0.3, min_tracking_confidence=0.2, model_complexity=1)
-# mp_draw = mp.solutions.drawing_utils
+mp_hands = mp.solutions.hands
+hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_confidence=0.4, min_tracking_confidence=0.4, model_complexity=0)
+mp_draw2 = mp.solutions.drawing_utils
 
 mp_pose = mp.solutions.pose
-mp_pose_model = mp_pose.Pose(static_image_mode=False, model_complexity=1, enable_segmentation=False, min_detection_confidence=0.5, min_tracking_confidence=0.5)
+mp_pose_model = mp_pose.Pose(static_image_mode=False, model_complexity=2, enable_segmentation=False, min_detection_confidence=0.8, min_tracking_confidence=0.8)
 mp_draw = mp.solutions.drawing_utils
 
 pose = YOLO("yolo11n-pose.pt")
@@ -136,18 +136,47 @@ def alter_mediapipe(img_rgb, handPts):
             handPts.append((x, y, landmark.visibility))
             cv2.circle(img_rgb, (x, y), 6, (0, 255, 0), cv2.FILLED)
 
+def is_index_finger_up(landmarks):
+    # Check if the index finger is extended: tip (8) is above the PIP joint (6)
+    index_extended = landmarks.landmark[8].y < landmarks.landmark[6].y
+
+    # Check that the other fingers (middle, ring, pinky) are folded
+    other_fingers_folded = True
+    for tip, pip in [(12, 10), (16, 14), (20, 18)]:
+        # If the tip is above its PIP joint, the finger is considered extended
+        if landmarks.landmark[tip].y < landmarks.landmark[pip].y:
+            other_fingers_folded = False
+    return index_extended and other_fingers_folded
+
 
 def alter_image(file_path, multiplayer):
     img_rgb = cv2.imread(file_path)
     # img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
+    active_hands = 0
+
+    print(active_hands)
     handPts = []
 
     if multiplayer:
         alter_yolo(img_rgb, handPts)
     else:
+        result = hands.process(img_rgb)
+        
         alter_mediapipe(img_rgb, handPts)
-
+        if result.multi_hand_landmarks:
+            for hand_landmarks in result.multi_hand_landmarks:
+                if is_index_finger_up(hand_landmarks):
+                    index_finger_indices = [5, 6, 7, 8]
+                    h2, w2, _ = img_rgb.shape
+                    # Draw only the index finger landmarks
+                    for idx in index_finger_indices:
+                        x = int(hand_landmarks.landmark[idx].x * w2)
+                        y = int(hand_landmarks.landmark[idx].y * h2)
+                        cv2.circle(img_rgb, (x, y), 5, (0, 255, 0), -1)
+                    active_hands = 1
+                else:
+                    active_hands = 0
     n = 8
     wOff = int(w / n)
     pad = 4
@@ -172,21 +201,21 @@ def alter_image(file_path, multiplayer):
     rects.append(Rectangle("top", start_x + top_box_width + padding, 0, start_x + 2 * top_box_width + padding, top_box_height))
     rects.append(Rectangle("topright", start_x + 2 * (top_box_width + padding), 0, start_x + 3 * top_box_width + 2 * padding, top_box_height))
     for r in rects:
-        renderRect(r, handPts, img_rgb)
+        renderRect(r, handPts, img_rgb, active_hands)
         res.append({"name": r.name, "col": r.collided})
 
     data = {"data": image_array_to_base64(img_rgb), "cols": res}
     return data
 
 
-def renderRect(rect: Rectangle, pts, img):
+def renderRect(rect: Rectangle, pts, img, active_hands=0):
     for p in pts:
         x, y, conf = p
         np = [x, y]
         if checkCollide(rect, np):
-            rect.collided += 1
+            rect.collided += 1+active_hands
 
-    cv2.rectangle(img, (rect.x1, rect.y1), (rect.x2, rect.y2), (255 if rect.collided == 1 else 0, 0 if rect.collided != 0 else 255, 255 if rect.collided >= 2 else 0), 2)
+    # cv2.rectangle(img, (rect.x1, rect.y1), (rect.x2, rect.y2), (255 if rect.collided == 1 else 0, 0 if rect.collided != 0 else 255, 255 if rect.collided >= 2 else 0), 2)
 
 
 def checkCollide(rect: Rectangle, p):

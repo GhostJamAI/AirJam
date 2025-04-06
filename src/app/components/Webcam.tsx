@@ -2,14 +2,23 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import { instrumentOptions } from "@/utils/utils";
-import { useEffect, useRef, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 import { ImgData } from "../types/WebsocketTypes";
+import { NoteMap } from "./Instruments";
+
+const arrayRange = (start: number, stop: number, step = 1) =>
+    Array.from(
+        { length: Math.ceil((stop - start) / step) + 1 },
+        (value, index) => start + index * step
+    );
+
 type WebcamProps = {
     ws: WebSocket | null;
     imgData: ImgData;
     sendImage: (v: string) => void;
     setInst: any;
     instI: number;
+    noteMapRef: RefObject<NoteMap>;
 };
 export default function Webcam({
     ws,
@@ -17,6 +26,7 @@ export default function Webcam({
     sendImage,
     setInst,
     instI,
+    noteMapRef,
 }: WebcamProps) {
     const wcRef = useRef<HTMLVideoElement>(null);
     const cvRef = useRef<HTMLCanvasElement>(null);
@@ -26,6 +36,7 @@ export default function Webcam({
     const [tlbState, setTlbState] = useState(false);
     const [rbState, setRbState] = useState(false);
     const [trbState, setTrbState] = useState(false);
+
     const leftIndex = imgData.cols.findIndex((col) => col.name === "left");
     const rightIndex = imgData.cols.findIndex((col) => col.name === "right");
     const resetIndex = imgData.cols.findIndex((col) => col.name === "top");
@@ -35,8 +46,6 @@ export default function Webcam({
     const prevGroupIndex = imgData.cols.findIndex(
         (col) => col.name === "topleft"
     );
-
-    const wcWidth = 50;
 
     const indToNote = ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"];
 
@@ -252,6 +261,18 @@ export default function Webcam({
                                             "Drums"
                                                 ? indToDrum[i]
                                                 : indToNote[i]}
+                                        </div>
+
+                                        <div className="grid grid-cols-5">
+                                            {noteMapRef?.current && noteMapRef?.current[instrumentOptions[instI].label] &&
+                                            noteMapRef?.current[instrumentOptions[instI].label][i].repeatStage > 0 &&
+                                                arrayRange(1,5,1).map((v)=>{
+                                                    if(v <= noteMapRef?.current[instrumentOptions[instI].label][i].repeatStage)
+                                                    return(<div className="rounded-full bg-teritary">
+                                                        #
+                                                    </div>)
+                                                })
+                                            }
                                         </div>
                                     </div>
                                 );

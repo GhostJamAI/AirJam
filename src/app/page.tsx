@@ -49,7 +49,7 @@ export default function Home() {
         ws.current!.send(payload);
     };
     return (
-        <div className="h-[100vh] w-[100vw] bg-[#222c4a] text-white">
+        <div className="h-[100vh] w-[100vw] bg-primary text-white">
             <div className="flex flex-row items-start justify-center h-full">
                 <div className="flex flex-row items-center justify-center h-full py-10">
                     <Webcam
@@ -58,6 +58,7 @@ export default function Home() {
                         sendImage={sendImage}
                         setInst={setSelectedInstrument}
                         instI={selectedInstrument}
+                        noteMapRef={noteMapRef}
                     />
                 </div>
                 <div className="flex flex-col justify-between py-10">
