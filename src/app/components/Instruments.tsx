@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { RefObject, useEffect, useRef, useState } from "react";
+import { RefObject, useEffect, useRef } from "react";
 import {
     drumMappings,
     initDrumAudioFont,
@@ -69,14 +69,12 @@ const drumCount = 7;
 
 export default function Instruments({
     imgData,
-    setInst,
     instI,
     noteMapRef,
     setMulti,
     multi,
 }: {
     imgData: ImgData;
-    setInst: any;
     instI: number;
     noteMapRef: RefObject<NoteMap>;
     setMulti: any;
@@ -84,7 +82,6 @@ export default function Instruments({
 }) {
     // 1) Which instrument index is selected, e.g. 0=Flute, 1=Drums, etc.
     const selectedInstrument = instrumentOptions[instI];
-    const isDrums = selectedInstrument.label === "Drums";
 
     // 2) Dictionary of instrumentName -> array of references
 
@@ -104,11 +101,9 @@ export default function Instruments({
 
     // 3) Script loading. We track which instruments are loaded, so we load once per instrument
     const loadedInstrumentsRef = useRef<Record<string, boolean>>({});
-    const [loaded, setLoaded] = useState(false);
 
     useEffect(() => {
         (async () => {
-            setLoaded(false);
             const label = selectedInstrument.label;
             if (!loadedInstrumentsRef.current[label]) {
                 // Not yet loaded => load it
@@ -123,19 +118,8 @@ export default function Instruments({
                     console.error("Error loading scripts for", label, err);
                 }
             }
-            setLoaded(true);
         })();
     }, [instI, selectedInstrument]);
-
-    // 4) Next / prev instrument logic
-    function nextInstrument(delta: number) {
-        setInst(() => {
-            let ni = instI + delta;
-            if (ni < 0) ni = instrumentOptions.length - 1;
-            if (ni >= instrumentOptions.length) ni = 0;
-            return ni;
-        });
-    }
 
     // 5) Return the references array for a given instrument label
     function getRefsForInstrument(label: string) {
@@ -435,8 +419,8 @@ export default function Instruments({
 
     function instHasRepeats(v:InstrumentMeta)
     {
-        var flag = false
-        noteMapRef.current[v.label].map((e, i) => {
+        let flag = false
+        noteMapRef.current[v.label].map((e) => {
             if(e.repeatStage > 0) flag = true;
         })
 
@@ -450,7 +434,7 @@ export default function Instruments({
             "
             >
                 <div className="flex flex-row gap-2 mr-6">
-                    <img src="AirJamLogoMin.png" className="size-12 my-auto"></img>
+                    <img src="AirJamLogoMin.png" className="size-12 my-auto" alt="logo"></img>
                     <div className="text-3xl font-bold font-serif">AirJam</div>
                 </div>
                 
@@ -527,9 +511,9 @@ export default function Instruments({
                                                     }:`}
                                                     <div className="grid grid-cols-6 gap-1 pl-2 my-auto">
                                                         {
-                                                            arrayRange(1,5,1).map((v)=>{
-                                                                if(v <= e.repeatStage)
-                                                                return(<div className="rounded-full shadow size-[1.2vw] text-transparent bg-secondary">
+                                                            arrayRange(1,5,1).map((n)=>{
+                                                                if(n <= e.repeatStage)
+                                                                return(<div key={v.label+`${n} ${e.repeatStage}`} className="rounded-full shadow size-[1.2vw] text-transparent bg-secondary">
                                                                     #
                                                                 </div>)
                                                             })

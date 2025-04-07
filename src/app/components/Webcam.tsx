@@ -17,7 +17,7 @@ type WebcamProps = {
     ws: WebSocket | null;
     imgData: ImgData;
     sendImage: (v: string) => void;
-    setInst: any;
+    setInst: (v:number) => void;
     instI: number;
     noteMapRef: RefObject<NoteMap>;
 };
